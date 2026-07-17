@@ -1,0 +1,3 @@
+[submodule "libfprint/drivers/gxfpmoc"]
+	path = libfprint/drivers/gxfpmoc
+	url = https://github.com/Void755/gxfpmoc

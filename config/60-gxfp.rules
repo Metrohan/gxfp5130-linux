@@ -1,0 +1,1 @@
+SUBSYSTEM=="misc", KERNEL=="gxfp", MODE="0660", TAG+="uaccess"
