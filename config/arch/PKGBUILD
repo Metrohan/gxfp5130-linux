@@ -1,0 +1,40 @@
+pkgname=libfprint-gxfp
+pkgver=1.94.5
+pkgrel=1
+pkgdesc='libfprint with GXFP5130 eSPI support and SIGFM matching'
+arch=('x86_64')
+url='https://github.com/Void755/libfprint'
+license=('LGPL-2.1-or-later')
+depends=('glib2' 'libgusb' 'libgudev' 'mbedtls' 'opencv')
+makedepends=('meson' 'ninja' 'cmake' 'doctest')
+provides=("libfprint=$pkgver" 'libfprint-2.so=2-64')
+conflicts=('libfprint')
+options=('!debug')
+source=()
+sha256sums=()
+
+prepare() {
+  rm -rf "$srcdir/libfprint"
+  cp -a "$startdir/../../libfprint" "$srcdir/libfprint"
+}
+
+build() {
+  meson setup "$srcdir/libfprint" "$srcdir/build" \
+    --prefix=/usr \
+    --buildtype=release \
+    -Ddrivers=gxfp \
+    -Ddoc=false \
+    -Dgtk-examples=false \
+    -Dintrospection=false \
+    -Dudev_rules=disabled \
+    -Dudev_hwdb=disabled
+  meson compile -C "$srcdir/build"
+}
+
+check() {
+  "$srcdir/build/libfprint/sigfm/sigfm-tests"
+}
+
+package() {
+  DESTDIR="$pkgdir" meson install -C "$srcdir/build"
+}
