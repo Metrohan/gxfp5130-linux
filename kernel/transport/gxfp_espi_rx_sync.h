@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #ifndef __GXFP_ESPI_RX_SYNC_H
 #define __GXFP_ESPI_RX_SYNC_H
 
@@ -6,8 +7,8 @@
 struct gxfp_dev;
 
 int gxfp_espi_read(struct gxfp_dev *gdev,
-                   __u8 *rx_buf,
-                   size_t rx_cap,
-                   size_t *out_rx_len);
+		   __u8 *rx_buf,
+		   size_t rx_cap,
+		   size_t *out_rx_len);
 
 #endif /* __GXFP_ESPI_RX_SYNC_H */

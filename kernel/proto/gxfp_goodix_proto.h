@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #ifndef __GXFP_GOODIX_PROTO_H
 #define __GXFP_GOODIX_PROTO_H
 

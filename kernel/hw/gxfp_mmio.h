@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #ifndef __GXFP_MMIO_H
 #define __GXFP_MMIO_H
 

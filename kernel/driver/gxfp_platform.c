@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/acpi.h>
@@ -116,6 +117,7 @@ int gxfp_platform_probe(struct platform_device *pdev)
 	/* GPIOs */
 	{
 		int gpio_rc = gxfp_platform_init_gpios(pdev);
+
 		if (gpio_rc) {
 			if (gpio_rc == -EPROBE_DEFER)
 				dev_dbg(&pdev->dev, "GPIO not ready, deferring probe\n");
@@ -141,7 +143,6 @@ int gxfp_platform_probe(struct platform_device *pdev)
 
 	gdev->irq.rx_tmp = devm_kmalloc(&pdev->dev, (size_t)GXFP_READ_CHUNK_MAX, GFP_KERNEL);
 	if (!gdev->irq.rx_tmp) {
-		dev_err(&pdev->dev, "IRQ: kmalloc(rx_tmp) failed\n");
 		ret = -ENOMEM;
 		goto err_ioctl;
 	}

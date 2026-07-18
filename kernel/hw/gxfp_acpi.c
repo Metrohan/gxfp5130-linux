@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0
 #include <linux/acpi.h>
 #include <linux/device.h>
 #include <linux/delay.h>
@@ -29,6 +30,7 @@ static int gxfp_acpi_res_cb(struct acpi_resource *ares, void *context)
 		struct acpi_resource_gpio *g = &ares->data.gpio;
 		u16 pin0 = 0xffff;
 		const char *ctype = "gpio?";
+
 		st->gpio_seen++;
 
 		if (g->pin_table_length < 1)

@@ -1,0 +1,90 @@
+.. SPDX-License-Identifier: GPL-2.0
+
+=====================================
+Goodix GXFP5130 Fingerprint Sensor
+=====================================
+
+Overview
+--------
+
+The GXFP5130 is a press-type fingerprint sensor by Goodix Technology used in
+several Huawei MateBook laptops. It connects to the host via an eSPI-based
+MMIO mailbox interface and is enumerated through ACPI (HID: ``GXFP5130``).
+
+This driver exposes a character device (``/dev/gxfp``) that userspace
+libraries such as libfprint use to perform fingerprint enrollment and
+verification through fprintd.
+
+Hardware interface
+------------------
+
+The sensor communicates through a memory-mapped mailbox window provided by
+the ACPI ``_CRS`` resource. Signalling uses three GPIOs:
+
+- **write-done**: host pulses high after writing a command frame
+- **read-done**: host pulses high after reading each chunk of a response
+- **irq**: sensor asserts to indicate a response is available
+
+All frames use a 4-byte eSPI wrapper header followed by a Goodix MP protocol
+frame, which in turn wraps a Goodix command/response body.
+
+UAPI
+----
+
+The character device supports the following operations:
+
+``open(2)``
+    Requires ``CAP_SYS_ADMIN``. Only one reader is allowed at a time.
+
+``write(2)``
+    Write a ``struct gxfp_tx_pkt_hdr`` followed by the payload bytes.
+    The driver wraps this in an eSPI frame and sends it to the sensor.
+
+``read(2)``
+    Returns one response record at a time. Each record begins with a
+    ``struct gxfp_tap_hdr`` header followed by the response payload.
+    Blocks until a response is available (unless ``O_NONBLOCK``).
+
+``poll(2)``
+    Returns ``EPOLLIN`` when a response record is available.
+
+``ioctl(2)``
+    ``GXFP_IOCTL_FLUSH_RXQ`` — discard all queued response records.
+
+Kernel parameters
+-----------------
+
+None. All configuration is automatic from ACPI.
+
+sysfs attributes
+----------------
+
+``/sys/class/misc/gxfp/acpi_id`` (read-only)
+    ACPI HID of the enumerated device (e.g. ``GXFP5130``).
+
+debugfs
+-------
+
+When ``CONFIG_DEBUG_FS`` is enabled, the driver creates
+``/sys/kernel/debug/gxfp/``:
+
+``trace_dump`` (read-only)
+    Ring buffer of recent driver trace events, one per line.
+    Format: ``<seq> <ts_ns> <message>``
+
+``trace_clear`` (write-only)
+    Writing anything clears the trace ring buffer.
+
+``trace_enable`` (read-write)
+    ``0`` to disable tracing (default), ``1`` to enable.
+
+Supported hardware
+------------------
+
+=============================== ======= ============================
+Device                          ACPI ID Firmware seen
+=============================== ======= ============================
+Huawei MateBook D16 2024        GXFP5130 GF_GCC_EC_20067
+Huawei MateBook X Pro 2024      GXFP5130 GF_GCC_EC_20068
+Huawei MateBook 14 2024         GXFP5130 (under investigation)
+=============================== ======= ============================

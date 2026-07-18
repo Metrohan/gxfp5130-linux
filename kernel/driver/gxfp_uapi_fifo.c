@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0
 #include <linux/fs.h>
 #include <linux/uaccess.h>
 #include <linux/slab.h>
@@ -50,6 +51,7 @@ static void gxfp_uapi_rxq_push(struct gxfp_dev *gdev, const __u8 *buf, size_t le
 	need = sizeof(hdr) + mp.payload_len;
 	if (kfifo_avail(&gdev->uapi.rxq_fifo) < need) {
 		unsigned int avail = kfifo_avail(&gdev->uapi.rxq_fifo);
+
 		spin_unlock_irqrestore(&gdev->uapi.rxq_lock, flags);
 		dev_warn_ratelimited(gdev->dev,
 			"rxq: drop need=%zu avail=%u\n",
@@ -189,8 +191,7 @@ ssize_t gxfp_uapi_read(struct file *file, char __user *ubuf, size_t count, loff_
 		goto out_unlock;
 
 	tmp = kmalloc(need, GFP_KERNEL);
-	if (!tmp)
-	{
+	if (!tmp) {
 		ret = -ENOMEM;
 		goto out_unlock;
 	}

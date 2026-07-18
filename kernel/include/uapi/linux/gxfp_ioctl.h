@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #ifndef __UAPI_GXFP_IOCTL_H
 #define __UAPI_GXFP_IOCTL_H
 
@@ -14,7 +15,7 @@
 /* Maximum protocol payload bytes exported via read(2) records. */
 #define GXFP_IOCTL_TAP_PAYLOAD_MAX (128u * 1024u)
 
-/* 
+/*
  * Stream tap (read/poll) record header.
  * Followed by `len` bytes of protocol payload.
  */

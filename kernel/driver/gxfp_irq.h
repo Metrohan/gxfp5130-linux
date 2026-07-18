@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #ifndef __GXFP_IRQ_H
 #define __GXFP_IRQ_H
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0
 #include <linux/kernel.h>
 #include <linux/device.h>
 #include <linux/delay.h>
@@ -48,9 +49,8 @@ static int gxfp_do_query_mcu_state(struct gxfp_dev *gdev,
 
 	memset(out, 0, sizeof(*out));
 
-	if (!gdev->hw.mailbox_mmio || gdev->hw.mailbox_size < GXFP_MAILBOX_MIN_SIZE) {
+	if (!gdev->hw.mailbox_mmio || gdev->hw.mailbox_size < GXFP_MAILBOX_MIN_SIZE)
 		return -ENODEV;
-	}
 
 	ktime_get_real_ts64(&ts);
 	ts_u16 = (__u16)(((__u64)(ts.tv_sec % 60) * 1000ull) + ((__u64)ts.tv_nsec / 1000000ull));
@@ -67,9 +67,8 @@ static int gxfp_do_query_mcu_state(struct gxfp_dev *gdev,
 			   GXFP_CMD_QUERY_MCU_STATE,
 			   payload, sizeof(payload), &payload_len,
 			   GXFP_DEFAULT_RETRY_COUNT, GXFP_DEFAULT_TIMEOUT_US);
-	if (ret) {
+	if (ret)
 		return ret;
-	}
 
 	ret = gxfp_cmd_parse_mcu_state_payload(payload, payload_len, out);
 	if (ret)

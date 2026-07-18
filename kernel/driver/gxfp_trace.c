@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0
 #include <linux/debugfs.h>
 #include <linux/kernel.h>
 #include <linux/ktime.h>
@@ -95,6 +96,7 @@ static int gxfp_trace_dump_show(struct seq_file *s, void *unused)
 	start = (gxfp_trace.head + GXFP_TRACE_RING_SIZE - count) % GXFP_TRACE_RING_SIZE;
 	for (i = 0; i < count; i++) {
 		u32 idx = (start + i) % GXFP_TRACE_RING_SIZE;
+
 		strscpy(snapshot[i], gxfp_trace.lines[idx], GXFP_TRACE_LINE_MAX);
 	}
 	spin_unlock_irqrestore(&gxfp_trace.lock, flags);
@@ -169,8 +171,7 @@ void gxfp_trace_exit(void)
 	if (!READ_ONCE(gxfp_trace.inited))
 		return;
 
-	if (gxfp_trace.dir)
-		debugfs_remove_recursive(gxfp_trace.dir);
+	debugfs_remove_recursive(gxfp_trace.dir);
 	gxfp_trace.dir = NULL;
 	gxfp_trace.inited = false;
 }

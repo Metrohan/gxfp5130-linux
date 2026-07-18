@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #ifndef __GXFP_UAPI_DRV_H
 #define __GXFP_UAPI_DRV_H
 

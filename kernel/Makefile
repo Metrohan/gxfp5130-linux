@@ -1,8 +1,5 @@
-# Standard kernel module build
-KDIR := $(if $(KERNELDIR),$(KERNELDIR),/lib/modules/$(shell uname -r)/build)
-
-# Module configuration
-obj-m += gxfp.o
+# SPDX-License-Identifier: GPL-2.0
+obj-$(CONFIG_GXFP5130) += gxfp.o
 
 ccflags-y += -I$(src)/include
 
@@ -19,25 +16,13 @@ gxfp-y := \
 	proto/gxfp_mp_proto.o \
 	proto/gxfp_goodix_proto.o \
 	cmd/gxfp_cmd.o \
+	cmd/gxfp_cmd_version.o \
+	cmd/gxfp_cmd_mcu_state.o \
+	cmd/gxfp_cmd_mcu_config.o \
+	cmd/gxfp_cmd_reset.o \
 	driver/gxfp_platform.o \
 	driver/gxfp_irq.o \
 	driver/gxfp_trace.o \
 	driver/gxfp_uapi_fifo.o \
 	driver/gxfp_uapi_ctrl.o \
-	driver/gxfp_uapi_misc.o \
-	cmd/gxfp_cmd_version.o \
-	cmd/gxfp_cmd_mcu_state.o \
-	cmd/gxfp_cmd_mcu_config.o \
-	cmd/gxfp_cmd_reset.o 
-
-# Build targets
-all:
-	$(MAKE) -C $(KDIR) M=$(CURDIR) modules
-
-clean:
-	$(MAKE) -C $(KDIR) M=$(CURDIR) clean
-
-install:
-	$(MAKE) -C $(KDIR) M=$(CURDIR) modules_install
-
-.PHONY: all clean install
+	driver/gxfp_uapi_misc.o

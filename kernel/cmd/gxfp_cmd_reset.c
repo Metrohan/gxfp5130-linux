@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0
 #include <linux/kernel.h>
 #include <linux/device.h>
 #include <linux/delay.h>
@@ -102,7 +103,7 @@ int gxfp_cmd_recover_session(struct gxfp_dev *gdev, bool unstick_tls)
 		if (!r)
 			break;
 		if ((tries + 1) < 3)
-			msleep(10);
+			usleep_range(10000, 11000);
 	}
 	if (r && !rc)
 		rc = r;

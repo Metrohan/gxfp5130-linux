@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0
 #include <linux/kernel.h>
 #include <linux/device.h>
 #include <linux/delay.h>
@@ -24,6 +25,7 @@ static bool gxfp_extract_ascii_version(const __u8 *data, char *out, size_t out_l
 
 	for (j = 0; (j + 1) < out_len; j++) {
 		__u8 ch = data[j];
+
 		if (ch == 0 || ch < 0x20 || ch > 0x7e)
 			break;
 		out[j] = (char)ch;
@@ -34,7 +36,7 @@ static bool gxfp_extract_ascii_version(const __u8 *data, char *out, size_t out_l
 }
 
 static int gxfp_do_get_version(struct gxfp_dev *gdev,
-                               struct gxfp_get_version_result *out)
+			       struct gxfp_get_version_result *out)
 {
 	static const __u8 req_payload[] = { 0x01 };
 	__u8 payload[GXFP_MAX_VERSION_RAW];

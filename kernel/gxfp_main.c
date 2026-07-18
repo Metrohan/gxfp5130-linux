@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/acpi.h>
@@ -122,4 +123,5 @@ module_platform_driver(gxfp_driver);
 
 MODULE_DESCRIPTION("eSPI-Based GXFP5130 Fingerprint Sensor Driver");
 MODULE_AUTHOR("vindeu");
+MODULE_AUTHOR("Metehan Günen <metehangnen@gmail.com>");
 MODULE_LICENSE("GPL");

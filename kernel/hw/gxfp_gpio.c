@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0
 #include <linux/device.h>
 #include <linux/errno.h>
 #include <linux/delay.h>
@@ -31,7 +32,7 @@ void gxfp_gpio_pulse_write_done(struct gxfp_dev *gdev)
 	gpiod_set_value_cansleep(gdev->hw.gpio_write_done, 1);
 	gxfp_gpio_pulse_delay_us(GXFP_GPIO_PULSE_HIGH_US);
 	gpiod_set_value_cansleep(gdev->hw.gpio_write_done, 0);
-	
+
 	gxfp_gpio_pulse_delay_us(GXFP_GPIO_READ_DONE_CLEAR_DELAY_US);
 }
 

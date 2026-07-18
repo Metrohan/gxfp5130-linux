@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #ifndef __GXFP_CMD_RESET_H
 #define __GXFP_CMD_RESET_H
 
@@ -24,4 +25,3 @@ int gxfp_cmd_protocol_init(struct gxfp_dev *gdev);
 int gxfp_cmd_recover_session(struct gxfp_dev *gdev, bool unstick_tls);
 
 #endif /* __GXFP_CMD_RESET_H */
-

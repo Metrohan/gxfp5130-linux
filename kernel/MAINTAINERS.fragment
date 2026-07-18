@@ -1,0 +1,7 @@
+GOODIX GXFP5130 FINGERPRINT SENSOR DRIVER
+M:	Metehan Günen <metehangnen@gmail.com>
+L:	linux-kernel@vger.kernel.org
+S:	Maintained
+F:	Documentation/misc-devices/gxfp5130.rst
+F:	drivers/misc/gxfp5130/
+F:	include/uapi/linux/gxfp_ioctl.h
