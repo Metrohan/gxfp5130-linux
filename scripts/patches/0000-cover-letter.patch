@@ -1,0 +1,87 @@
+From 0bdafa086dc9fe2d52bdf978a7afd3df2979f352 Mon Sep 17 00:00:00 2001
+From: Metehan Günen <metehangnen@gmail.com>
+Date: Sat, 18 Jul 2026 03:51:24 +0300
+Subject: [PATCH 0/4] drivers/misc: add Goodix GXFP5130 eSPI fingerprint sensor driver
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This series adds a kernel driver for the Goodix GXFP5130 fingerprint
+sensor found in Huawei MateBook laptops (D16 2024, X Pro 2024, 14 2024).
+
+The sensor is enumerated through ACPI (HID: GXFP5130) and communicates
+with the host via an eSPI-based memory-mapped mailbox window plus three
+GPIOs. It does not use SPI or I2C bus drivers.
+
+A misc character device /dev/gxfp is exposed to userspace. The libfprint
+library (with a corresponding GXFP5130 plugin) uses this device to perform
+biometric enrollment and verification via fprintd.
+
+The four patches are:
+  [1/4] UAPI header (include/uapi/linux/gxfp_ioctl.h)
+  [2/4] Driver source tree (drivers/misc/gxfp5130/)
+  [3/4] Documentation (Documentation/misc-devices/gxfp5130.rst)
+  [4/4] MAINTAINERS entry
+
+Metehan Günen (4):
+  include/uapi/linux: add gxfp_ioctl.h for GXFP5130 fingerprint sensor
+  drivers/misc: add Goodix GXFP5130 eSPI fingerprint sensor driver
+  Documentation/misc-devices: add gxfp5130.rst
+  MAINTAINERS: add entry for GXFP5130 fingerprint sensor driver
+
+ Documentation/misc-devices/gxfp5130.rst       |  90 +++++++
+ Documentation/misc-devices/index.rst          |   1 +
+ MAINTAINERS                                   |   7 +
+ drivers/misc/Kconfig                          |   2 +
+ drivers/misc/Makefile                         |   2 +
+ drivers/misc/gxfp5130/Kconfig                 |  18 ++
+ drivers/misc/gxfp5130/Makefile                |  28 ++
+ drivers/misc/gxfp5130/cmd/gxfp_cmd.c          | 177 ++++++++++++
+ drivers/misc/gxfp5130/cmd/gxfp_cmd.h          |  54 ++++
+ .../misc/gxfp5130/cmd/gxfp_cmd_mcu_config.c   |  28 ++
+ .../misc/gxfp5130/cmd/gxfp_cmd_mcu_config.h   |  12 +
+ .../misc/gxfp5130/cmd/gxfp_cmd_mcu_state.c    |  89 +++++++
+ .../misc/gxfp5130/cmd/gxfp_cmd_mcu_state.h    |  30 +++
+ drivers/misc/gxfp5130/cmd/gxfp_cmd_reset.c    | 185 +++++++++++++
+ drivers/misc/gxfp5130/cmd/gxfp_cmd_reset.h    |  27 ++
+ drivers/misc/gxfp5130/cmd/gxfp_cmd_version.c  | 100 +++++++
+ drivers/misc/gxfp5130/cmd/gxfp_cmd_version.h  |  22 ++
+ drivers/misc/gxfp5130/driver/gxfp_irq.c       |  57 ++++
+ drivers/misc/gxfp5130/driver/gxfp_irq.h       |   9 +
+ drivers/misc/gxfp5130/driver/gxfp_platform.c  | 251 ++++++++++++++++++
+ drivers/misc/gxfp5130/driver/gxfp_platform.h  |  12 +
+ drivers/misc/gxfp5130/driver/gxfp_trace.c     | 179 +++++++++++++
+ drivers/misc/gxfp5130/driver/gxfp_trace.h     |  15 ++
+ drivers/misc/gxfp5130/driver/gxfp_uapi.h      |  25 ++
+ drivers/misc/gxfp5130/driver/gxfp_uapi_ctrl.c | 136 ++++++++++
+ drivers/misc/gxfp5130/driver/gxfp_uapi_fifo.c | 245 +++++++++++++++++
+ drivers/misc/gxfp5130/driver/gxfp_uapi_misc.c | 123 +++++++++
+ drivers/misc/gxfp5130/gxfp_main.c             | 127 +++++++++
+ drivers/misc/gxfp5130/hw/gxfp_acpi.c          | 130 +++++++++
+ drivers/misc/gxfp5130/hw/gxfp_acpi.h          |  15 ++
+ drivers/misc/gxfp5130/hw/gxfp_delay.c         |  15 ++
+ drivers/misc/gxfp5130/hw/gxfp_delay.h         |   7 +
+ drivers/misc/gxfp5130/hw/gxfp_gpio.c          |  64 +++++
+ drivers/misc/gxfp5130/hw/gxfp_gpio.h          |  17 ++
+ drivers/misc/gxfp5130/hw/gxfp_mmio.c          |  45 ++++
+ drivers/misc/gxfp5130/hw/gxfp_mmio.h          |  10 +
+ .../misc/gxfp5130/include/gxfp_constants.h    |  38 +++
+ drivers/misc/gxfp5130/include/gxfp_priv.h     |  55 ++++
+ .../misc/gxfp5130/proto/gxfp_goodix_proto.c   |  84 ++++++
+ .../misc/gxfp5130/proto/gxfp_goodix_proto.h   |  31 +++
+ drivers/misc/gxfp5130/proto/gxfp_mp_proto.c   |  96 +++++++
+ drivers/misc/gxfp5130/proto/gxfp_mp_proto.h   |  27 ++
+ .../gxfp5130/transport/gxfp_espi_common.c     |  80 ++++++
+ .../gxfp5130/transport/gxfp_espi_common.h     |  27 ++
+ .../gxfp5130/transport/gxfp_espi_rx_irq.c     | 120 +++++++++
+ .../gxfp5130/transport/gxfp_espi_rx_irq.h     |  15 ++
+ .../gxfp5130/transport/gxfp_espi_rx_sync.c    |  96 +++++++
+ .../gxfp5130/transport/gxfp_espi_rx_sync.h    |  14 +
+ .../misc/gxfp5130/transport/gxfp_espi_tx.c    |  88 ++++++
+ .../misc/gxfp5130/transport/gxfp_espi_tx.h    |  20 ++
+ include/uapi/linux/gxfp_ioctl.h               |  43 +++
+ 51 files changed, 3188 insertions(+)
+
+--
+2.55.0
+

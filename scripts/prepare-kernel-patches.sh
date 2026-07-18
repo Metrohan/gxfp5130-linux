@@ -318,30 +318,51 @@ git -C "$KDIR" format-patch \
     --output-directory="$PATCH_OUT" \
     -4
 
-# Fill in cover letter placeholders
+# Fill in cover letter placeholders using python (sed multiline is fragile)
 COVER="$PATCH_OUT/0000-cover-letter.patch"
-sed -i \
-    -e 's/\*\*\* SUBJECT HERE \*\*\*/drivers\/misc: add Goodix GXFP5130 eSPI fingerprint sensor driver/' \
-    -e 's/\*\*\* BLURB HERE \*\*\*/'"$(cat <<'BLURB'
+python3 - "$COVER" <<'PY'
+import sys, pathlib
+
+path = pathlib.Path(sys.argv[1])
+text = path.read_text()
+
+subject = "drivers/misc: add Goodix GXFP5130 eSPI fingerprint sensor driver"
+blurb = """\
 This series adds a kernel driver for the Goodix GXFP5130 fingerprint
 sensor found in Huawei MateBook laptops (D16 2024, X Pro 2024, 14 2024).
 
 The sensor is enumerated through ACPI (HID: GXFP5130) and communicates
 with the host via an eSPI-based memory-mapped mailbox window plus three
-GPIOs.  It does not use SPI or I²C bus drivers.
+GPIOs. It does not use SPI or I2C bus drivers.
 
-A misc character device \/dev\/gxfp is exposed to userspace.  The
-libfprint library (with a corresponding GXFP5130 plugin) uses this
-device to perform biometric enrollment and verification via fprintd.
+A misc character device /dev/gxfp is exposed to userspace. The libfprint
+library (with a corresponding GXFP5130 plugin) uses this device to perform
+biometric enrollment and verification via fprintd.
 
 The four patches are:
-  [1\/4] UAPI header (include\/uapi\/linux\/gxfp_ioctl.h)
-  [2\/4] Driver source tree (drivers\/misc\/gxfp5130\/)
-  [3\/4] Documentation (Documentation\/misc-devices\/gxfp5130.rst)
-  [4\/4] MAINTAINERS entry
-BLURB
-)/" \
-    "$COVER" 2>/dev/null || true
+  [1/4] UAPI header (include/uapi/linux/gxfp_ioctl.h)
+  [2/4] Driver source tree (drivers/misc/gxfp5130/)
+  [3/4] Documentation (Documentation/misc-devices/gxfp5130.rst)
+  [4/4] MAINTAINERS entry"""
+
+# Fix author line from git config identity to patch author
+text = text.replace(
+    "Subject: [PATCH 0/4] *** SUBJECT HERE ***",
+    f"Subject: [PATCH 0/4] {subject}"
+)
+text = text.replace("*** BLURB HERE ***", blurb)
+
+# Fix From: line if it shows the git config identity
+import re
+text = re.sub(
+    r'^From:.*$',
+    'From: Metehan Günen <metehangnen@gmail.com>',
+    text, count=1, flags=re.MULTILINE
+)
+
+path.write_text(text)
+print(f"    Cover letter updated: {path}")
+PY
 
 echo ""
 echo "==> Done. Patches written to $PATCH_OUT/"
