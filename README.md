@@ -165,3 +165,7 @@ The uninstall script does not delete the PSK or enrolled fingerprints.
   5 fallback already present on this machine.
 
 The stack is experimental and is not affiliated with Goodix or Huawei.
+
+## Acknowledgements
+
+This integration was built with [Claude Code](https://claude.ai/code) (Anthropic).
