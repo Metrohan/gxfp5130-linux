@@ -59,6 +59,14 @@ echo ""
 git -C "$KDIR" checkout -b "$BRANCH"
 echo "--> Created branch $BRANCH"
 
+# Shorthand: commit with the correct author identity regardless of what
+# the kernel tree's git config says (avoids "Missing Signed-off-by by
+# nominal patch author" checkpatch error).
+GCOMMIT=(git -C "$KDIR"
+    -c user.name="Metehan Günen"
+    -c user.email="metehangnen@gmail.com"
+    commit)
+
 # ────────────────────────────────────────────────────────────────────────────
 # COMMIT 1: UAPI header
 # ────────────────────────────────────────────────────────────────────────────
@@ -70,7 +78,7 @@ install -Dm644 \
     "$KDIR/include/uapi/linux/gxfp_ioctl.h"
 
 git -C "$KDIR" add include/uapi/linux/gxfp_ioctl.h
-git -C "$KDIR" commit -m "$(cat <<'EOF'
+"${GCOMMIT[@]}" -m "$(cat <<'EOF'
 include/uapi/linux: add gxfp_ioctl.h for GXFP5130 fingerprint sensor
 
 Define the userspace ABI for the Goodix GXFP5130 eSPI fingerprint sensor
@@ -141,7 +149,7 @@ git -C "$KDIR" add \
     drivers/misc/Kconfig \
     drivers/misc/Makefile
 
-git -C "$KDIR" commit -m "$(cat <<'EOF'
+"${GCOMMIT[@]}" -m "$(cat <<'EOF'
 drivers/misc: add Goodix GXFP5130 eSPI fingerprint sensor driver
 
 The GXFP5130 is a press-type fingerprint sensor by Goodix Technology.
@@ -211,7 +219,7 @@ fi
 git -C "$KDIR" add Documentation/misc-devices/gxfp5130.rst
 [ -f "$INDEX_RST" ] && git -C "$KDIR" add Documentation/misc-devices/index.rst 2>/dev/null || true
 
-git -C "$KDIR" commit -m "$(cat <<'EOF'
+"${GCOMMIT[@]}" -m "$(cat <<'EOF'
 Documentation/misc-devices: add gxfp5130.rst
 
 Document the Goodix GXFP5130 eSPI fingerprint sensor driver:
@@ -278,7 +286,7 @@ PY
 fi
 
 git -C "$KDIR" add MAINTAINERS
-git -C "$KDIR" commit -m "$(cat <<'EOF'
+"${GCOMMIT[@]}" -m "$(cat <<'EOF'
 MAINTAINERS: add entry for GXFP5130 fingerprint sensor driver
 
 Add maintainer entry for the new Goodix GXFP5130 driver covering
@@ -295,8 +303,14 @@ echo ""
 echo "==> Running checkpatch.pl ..."
 CHECKPATCH="$KDIR/scripts/checkpatch.pl"
 if [ -x "$CHECKPATCH" ]; then
-    git -C "$KDIR" format-patch -4 --stdout | \
-        perl "$CHECKPATCH" --no-tree - || true
+    TMPDIR_CHECK="$(mktemp -d)"
+    git -C "$KDIR" format-patch -4 --output-directory="$TMPDIR_CHECK"
+    CHECKPATCH_OK=true
+    for p in "$TMPDIR_CHECK"/00*.patch; do
+        perl "$CHECKPATCH" --no-tree "$p" || CHECKPATCH_OK=false
+    done
+    rm -rf "$TMPDIR_CHECK"
+    $CHECKPATCH_OK || echo "    (checkpatch reported issues above)"
 else
     echo "    checkpatch.pl not found at $CHECKPATCH — skipping"
 fi
