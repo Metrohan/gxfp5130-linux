@@ -352,14 +352,6 @@ text = text.replace(
 )
 text = text.replace("*** BLURB HERE ***", blurb)
 
-# Fix From: line if it shows the git config identity
-import re
-text = re.sub(
-    r'^From:.*$',
-    'From: Metehan Günen <metehangnen@gmail.com>',
-    text, count=1, flags=re.MULTILINE
-)
-
 path.write_text(text)
 print(f"    Cover letter updated: {path}")
 PY
