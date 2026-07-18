@@ -16,3 +16,4 @@ finger.pgm
 *.pgm
 build/
 libfprint/build/
+scripts/patches/00*.patch
