@@ -1,5 +1,9 @@
 # Goodix GXFP5130 Linux Fingerprint Driver
 
+English | **[Türkçe](README.tr.md)**
+
+[![License: GPL-2.0](https://img.shields.io/badge/License-GPL--2.0-blue.svg)](LICENSE)
+
 Full Linux support for the **Goodix GXFP5130** fingerprint sensor found in
 Huawei MateBook laptops — kernel module, userspace tools, libfprint integration,
 and PAM setup, all in one place.
@@ -169,4 +173,10 @@ If the driver works on a MateBook model not listed above, please open a
 - libfprint fork: [`Void755/libfprint`](https://github.com/Void755/libfprint), snapshot `1f7941e` + OpenCV 5 fallback
 
 The stack is experimental and is not affiliated with Goodix or Huawei.
+
+## License
+
+Kernel module: [GPL-2.0-only](LICENSE)
+libfprint fork: [LGPL-2.1+](libfprint/COPYING)
+Userspace tools: GPL-2.0-only
 
