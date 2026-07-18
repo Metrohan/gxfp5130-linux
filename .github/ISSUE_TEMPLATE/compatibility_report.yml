@@ -1,0 +1,70 @@
+name: Compatibility report
+description: Report that the driver works (or doesn't work) on a device not listed in the README
+labels: ["compatibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to report a new compatible device or confirm an untested one.
+        Even a "works perfectly" report is valuable — it gets added to the supported hardware table.
+
+  - type: input
+    id: laptop
+    attributes:
+      label: Laptop model
+      placeholder: "e.g. Huawei MateBook X Pro 2024"
+    validations:
+      required: true
+
+  - type: input
+    id: acpi_id
+    attributes:
+      label: ACPI device ID
+      description: "`find /sys/bus/acpi/devices -name 'GXFP*' -maxdepth 2`"
+      placeholder: "e.g. GXFP5130:00"
+    validations:
+      required: true
+
+  - type: input
+    id: firmware
+    attributes:
+      label: Firmware string
+      description: "`journalctl -k -b -g 'INIT: FW'`"
+      placeholder: "e.g. GF_GCC_EC_20067"
+    validations:
+      required: true
+
+  - type: input
+    id: kernel
+    attributes:
+      label: Kernel version
+      description: "`uname -r`"
+    validations:
+      required: true
+
+  - type: input
+    id: distro
+    attributes:
+      label: Distribution
+      placeholder: "e.g. Arch Linux, Ubuntu 24.04"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: Does it work?
+      options:
+        - "Yes — fully working (capture + enrollment + verify)"
+        - "Partial — some steps work"
+        - "No — does not work"
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Any quirks, workarounds, or differences from the README instructions.
+    validations:
+      required: false
