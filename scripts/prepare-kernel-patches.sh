@@ -156,43 +156,32 @@ The GXFP5130 is a press-type fingerprint sensor by Goodix Technology.
 It is found in Huawei MateBook laptops (D16 2024, X Pro 2024, 14 2024)
 and is enumerated through ACPI with HID GXFP5130.
 
-Hardware interface
-------------------
-The sensor does not sit on SPI or I²C. Instead the ACPI firmware maps a
-memory window (eSPI flash-channel mailbox) and three GPIOs:
+Hardware interface: The sensor does not sit on SPI or I2C. The ACPI
+firmware maps a memory window (eSPI flash-channel mailbox) and three
+GPIOs: write-done (host pulses after writing a command), read-done
+(host pulses after reading each response chunk), and irq (sensor asserts
+to signal a response is ready). All frames use a 4-byte eSPI wrapper
+header followed by a Goodix MP protocol frame carrying the command body.
 
-  write-done  host pulses high after writing a command frame
-  read-done   host pulses high after reading each response chunk
-  irq         sensor asserts to signal that a response is ready
-
-All frames use a 4-byte eSPI wrapper header followed by a Goodix MP
-protocol frame, which in turn carries the command/response body.
-
-Driver structure
-----------------
+Driver structure:
   transport/   eSPI framing layer (TX, synchronous RX, IRQ-driven RX)
   hw/          ACPI resource parsing, MMIO helpers, GPIO helpers, delay
   proto/       MP and Goodix command protocol encode/decode
-  cmd/         individual command helpers (version, MCU state, reset …)
+  cmd/         individual command helpers (version, MCU state, reset ...)
   driver/      platform probe/remove, IRQ thread, UAPI misc device,
                debugfs trace ring buffer
   include/     private driver headers (gxfp_priv.h, gxfp_constants.h)
 
-Userspace interface
--------------------
-A misc character device /dev/gxfp is created. Only one reader at a time
-is allowed (CAP_SYS_ADMIN required). write(2) sends command frames;
-read(2)/poll(2) return response records prefixed with gxfp_tap_hdr.
-GXFP_IOCTL_FLUSH_RXQ discards the kernel-side response queue.
-
+Userspace interface: A misc character device /dev/gxfp is created. Only
+one reader at a time is allowed (CAP_SYS_ADMIN required). write(2) sends
+command frames; read(2)/poll(2) return response records prefixed with
+gxfp_tap_hdr. GXFP_IOCTL_FLUSH_RXQ discards the kernel-side queue.
 The libfprint library communicates with the sensor through this device.
 
-Startup
--------
-On probe the driver executes a firmware-version handshake (up to 3
-retries) and falls back to a session-recovery sequence if the sensor
-does not acknowledge the first attempt. The IRQ line is kept masked
-until the handshake succeeds.
+Startup: On probe the driver executes a firmware-version handshake (up
+to 3 retries) and falls back to a session-recovery sequence if the
+sensor does not acknowledge the first attempt. The IRQ line is kept
+masked until the handshake succeeds.
 
 Signed-off-by: Metehan Günen <metehangnen@gmail.com>
 EOF
