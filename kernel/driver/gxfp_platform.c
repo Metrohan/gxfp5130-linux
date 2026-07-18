@@ -182,7 +182,8 @@ int gxfp_platform_probe(struct platform_device *pdev)
 	dev_dbg(&pdev->dev, "IRQ: registered (irq=%d, flags=0x%lx, type=0x%x)\n",
 		 gdev->hw.irq, irq_flags, irq_type);
 
-	dev_dbg(&pdev->dev, "gxfp probed (mailbox=%pa len=%pa)\n", &res->start, &gdev->hw.mailbox_size);
+	dev_dbg(&pdev->dev, "gxfp probed (mailbox=%pa len=%pa)\n",
+		&res->start, &gdev->hw.mailbox_size);
 	return 0;
 
 err_ioctl:

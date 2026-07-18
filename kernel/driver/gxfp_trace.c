@@ -157,8 +157,10 @@ int gxfp_trace_init(struct device *dev)
 
 	gxfp_trace.dir = debugfs_create_dir("gxfp", NULL);
 	if (!IS_ERR_OR_NULL(gxfp_trace.dir)) {
-		debugfs_create_file("trace_dump", 0400, gxfp_trace.dir, NULL, &gxfp_trace_dump_fops);
-		debugfs_create_file("trace_clear", 0200, gxfp_trace.dir, NULL, &gxfp_trace_clear_fops);
+		debugfs_create_file("trace_dump", 0400, gxfp_trace.dir,
+				    NULL, &gxfp_trace_dump_fops);
+		debugfs_create_file("trace_clear", 0200, gxfp_trace.dir,
+				    NULL, &gxfp_trace_clear_fops);
 		debugfs_create_bool("trace_enable", 0600, gxfp_trace.dir, &gxfp_trace.enabled);
 	}
 

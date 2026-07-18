@@ -145,7 +145,8 @@ static int gxfp_uapi_peek_need(struct gxfp_dev *gdev, size_t count, size_t *out_
 	return 0;
 }
 
-static int gxfp_uapi_pop_record(struct gxfp_dev *gdev, __u8 *tmp, size_t need, unsigned int *out_popped)
+static int gxfp_uapi_pop_record(struct gxfp_dev *gdev, __u8 *tmp,
+				size_t need, unsigned int *out_popped)
 {
 	unsigned long flags;
 	unsigned int popped;

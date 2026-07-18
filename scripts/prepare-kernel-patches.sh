@@ -70,7 +70,7 @@ install -Dm644 \
     "$KDIR/include/uapi/linux/gxfp_ioctl.h"
 
 git -C "$KDIR" add include/uapi/linux/gxfp_ioctl.h
-git -C "$KDIR" commit -s -m "$(cat <<'EOF'
+git -C "$KDIR" commit -m "$(cat <<'EOF'
 include/uapi/linux: add gxfp_ioctl.h for GXFP5130 fingerprint sensor
 
 Define the userspace ABI for the Goodix GXFP5130 eSPI fingerprint sensor
@@ -141,7 +141,7 @@ git -C "$KDIR" add \
     drivers/misc/Kconfig \
     drivers/misc/Makefile
 
-git -C "$KDIR" commit -s -m "$(cat <<'EOF'
+git -C "$KDIR" commit -m "$(cat <<'EOF'
 drivers/misc: add Goodix GXFP5130 eSPI fingerprint sensor driver
 
 The GXFP5130 is a press-type fingerprint sensor by Goodix Technology.
@@ -211,7 +211,7 @@ fi
 git -C "$KDIR" add Documentation/misc-devices/gxfp5130.rst
 [ -f "$INDEX_RST" ] && git -C "$KDIR" add Documentation/misc-devices/index.rst 2>/dev/null || true
 
-git -C "$KDIR" commit -s -m "$(cat <<'EOF'
+git -C "$KDIR" commit -m "$(cat <<'EOF'
 Documentation/misc-devices: add gxfp5130.rst
 
 Document the Goodix GXFP5130 eSPI fingerprint sensor driver:
@@ -278,7 +278,7 @@ PY
 fi
 
 git -C "$KDIR" add MAINTAINERS
-git -C "$KDIR" commit -s -m "$(cat <<'EOF'
+git -C "$KDIR" commit -m "$(cat <<'EOF'
 MAINTAINERS: add entry for GXFP5130 fingerprint sensor driver
 
 Add maintainer entry for the new Goodix GXFP5130 driver covering
