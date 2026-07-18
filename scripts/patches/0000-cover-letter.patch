@@ -1,5 +1,5 @@
 From 0bdafa086dc9fe2d52bdf978a7afd3df2979f352 Mon Sep 17 00:00:00 2001
-From: Metrohan <metehangnn@outlook.com>
+From: =?UTF-8?q?Metehan=20G=C3=BCnen?= <metehangnen@gmail.com>
 Date: Sat, 18 Jul 2026 03:51:24 +0300
 Subject: [PATCH 0/4] drivers/misc: add Goodix GXFP5130 eSPI fingerprint sensor driver
 MIME-Version: 1.0

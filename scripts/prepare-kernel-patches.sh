@@ -352,6 +352,14 @@ text = text.replace(
 )
 text = text.replace("*** BLURB HERE ***", blurb)
 
+# Normalize From: to patch author identity
+import re
+text = re.sub(
+    r'^From:.*$',
+    'From: =?UTF-8?q?Metehan=20G=C3=BCnen?= <metehangnen@gmail.com>',
+    text, count=1, flags=re.MULTILINE
+)
+
 path.write_text(text)
 print(f"    Cover letter updated: {path}")
 PY
