@@ -3,6 +3,7 @@
 English | **[Türkçe](README.tr.md)**
 
 [![License: GPL-2.0](https://img.shields.io/badge/License-GPL--2.0-blue.svg)](LICENSE)
+[![Kernel Patch: Under Review](https://img.shields.io/badge/Kernel%20Patch-Under%20Review-yellow.svg)](https://lore.kernel.org/linux-kernel/20260718080917.21893-1-metehangnen@gmail.com/)
 
 Full Linux support for the **Goodix GXFP5130** fingerprint sensor found in
 Huawei MateBook laptops — kernel module, userspace tools, libfprint integration,
@@ -10,6 +11,18 @@ and PAM setup, all in one place.
 
 > Works on Huawei MateBook D16 2024 (MCLF-XX). If it works on your machine,
 > please [open a compatibility report](https://github.com/Metrohan/gxfp5130-linux/issues/new?template=compatibility_report.yml).
+
+---
+
+## Upstream status
+
+The kernel driver has been submitted to the Linux kernel mailing list
+for mainline inclusion:
+
+**[[PATCH 0/4] drivers/misc: add Goodix GXFP5130 eSPI fingerprint sensor driver](https://lore.kernel.org/linux-kernel/20260718080917.21893-1-metehangnen@gmail.com/)**
+
+Once accepted, the module will ship with the mainline kernel and no DKMS
+installation will be needed on supported distributions.
 
 ---
 
@@ -107,10 +120,14 @@ Add `pam_fprintd.so` as a `sufficient` rule above the password line in
 
 ```
 auth    required    pam_faillock.so   preauth
-auth    sufficient  pam_fprintd.so           ← add this line
+auth    sufficient  pam_fprintd.so timeout=10   ← add this line
 auth    [success=2 default=ignore]  pam_systemd_home.so
 auth    [success=1 default=bad]     pam_unix.so  try_first_pass nullok
 ```
+
+`timeout=10` is important — without it, typing a password causes a ~120 s
+wait while the fingerprint module times out before falling through to
+password auth.
 
 The same change in `/etc/pam.d/system-login` covers the display manager.
 

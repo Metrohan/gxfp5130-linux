@@ -6,9 +6,23 @@ entegrasyonu ve PAM kurulumu bir arada.
 
 **[English](README.md)** | Türkçe
 
+[![Kernel Patch: İncelemede](https://img.shields.io/badge/Kernel%20Patch-%C4%B0ncelemede-yellow.svg)](https://lore.kernel.org/linux-kernel/20260718080917.21893-1-metehangnen@gmail.com/)
+
 > Huawei MateBook D16 2024 (MCLF-XX) üzerinde çalışıyor.
 > Farklı bir modelde çalıştırdıysanız lütfen
 > [uyumluluk raporu açın](https://github.com/Metrohan/gxfp5130-linux/issues/new?template=compatibility_report.yml).
+
+---
+
+## Upstream durumu
+
+Çekirdek sürücüsü, mainline'a dahil edilmek üzere Linux kernel mailing
+list'ine gönderildi:
+
+**[[PATCH 0/4] drivers/misc: add Goodix GXFP5130 eSPI fingerprint sensor driver](https://lore.kernel.org/linux-kernel/20260718080917.21893-1-metehangnen@gmail.com/)**
+
+Kabul edildiğinde modül, mainline çekirdekle birlikte gelecek ve
+desteklenen dağıtımlarda DKMS kurulumuna gerek kalmayacak.
 
 ---
 
@@ -115,10 +129,13 @@ ekleyin:
 
 ```
 auth    required    pam_faillock.so   preauth
-auth    sufficient  pam_fprintd.so           ← bu satırı ekleyin
+auth    sufficient  pam_fprintd.so timeout=10   ← bu satırı ekleyin
 auth    [success=2 default=ignore]  pam_systemd_home.so
 auth    [success=1 default=bad]     pam_unix.so  try_first_pass nullok
 ```
+
+`timeout=10` önemli — olmadan şifre girildiğinde parmak izi modülü ~120 sn
+timeout bekleyip sonra şifreye düştüğü için giriş çok yavaş olur.
 
 Aynı değişikliği `/etc/pam.d/system-login` dosyasına eklemek ekran yöneticisini
 de kapsar.
