@@ -12,6 +12,12 @@ entegrasyonu ve PAM kurulumu bir arada.
 > Farklı bir modelde çalıştırdıysanız lütfen
 > [uyumluluk raporu açın](https://github.com/Metrohan/gxfp5130-linux/issues/new?template=compatibility_report.yml).
 
+> **Emek:** Orijinal çekirdek sürücüsü, `gxfpmoc` kullanıcı alanı kütüphanesi ve
+> libfprint SIGFM çatalı [**Void755**](https://github.com/Void755) tarafından
+> oluşturulmuştur. Bu repo o çalışmayı dağıtım için paketler (Arch paketi, PAM
+> entegrasyonu, mainline çekirdeğe gönderim) — tam kaynak anlık görüntüleri için
+> aşağıdaki [Kaynak Kodun Kökeni](#kaynak-kodun-kökeni) bölümüne bakın.
+
 ---
 
 ## Upstream durumu

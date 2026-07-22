@@ -1,9 +1,11 @@
+readm
+
 # Goodix GXFP5130 Linux Fingerprint Driver
 
 English | **[Türkçe](README.tr.md)**
 
 [![License: GPL-2.0](https://img.shields.io/badge/License-GPL--2.0-blue.svg)](LICENSE)
-[![Kernel Patch: Under Review](https://img.shields.io/badge/Kernel%20Patch-Under%20Review-yellow.svg)](https://lore.kernel.org/linux-kernel/20260718080917.21893-1-metehangnen@gmail.com/)
+[![Kernel Patch: Under Review](<https://img.shields.io/badge/Kernel%20Patch-Under%20Review-yellow.svg>)](https://lore.kernel.org/linux-kernel/20260718080917.21893-1-metehangnen@gmail.com/)
 
 Full Linux support for the **Goodix GXFP5130** fingerprint sensor found in
 Huawei MateBook laptops — kernel module, userspace tools, libfprint integration,
@@ -11,6 +13,12 @@ and PAM setup, all in one place.
 
 > Works on Huawei MateBook D16 2024 (MCLF-XX). If it works on your machine,
 > please [open a compatibility report](https://github.com/Metrohan/gxfp5130-linux/issues/new?template=compatibility_report.yml).
+
+> **Credits:** The original kernel driver, `gxfpmoc` userspace library, and
+> the libfprint SIGFM fork were created by [**Void755**](https://github.com/Void755).
+> This repository packages that work for distribution (Arch package, PAM
+> integration, mainline kernel submission) — see [Upstream provenance](#upstream-provenance)
+> for exact source snapshots.
 
 ---
 
@@ -41,10 +49,10 @@ This package fixes that end-to-end:
 
 ## Supported hardware
 
-| Laptop | ACPI ID | Firmware | Status |
-|---|---|---|---|
-| Huawei MateBook D16 2024 (MCLF-XX / M1010) | `GXFP5130:00` | `GF_GCC_EC_20067` | ✅ Verified |
-| Other MateBook models with `GXFP5130:00` | `GXFP5130:00` | unknown | ❓ Untested — please report |
+| Laptop                                     | ACPI ID         | Firmware            | Status                       |
+| ------------------------------------------ | --------------- | ------------------- | ---------------------------- |
+| Huawei MateBook D16 2024 (MCLF-XX / M1010) | `GXFP5130:00` | `GF_GCC_EC_20067` | ✅ Verified                  |
+| Other MateBook models with`GXFP5130:00`  | `GXFP5130:00` | unknown             | ❓ Untested — please report |
 
 Check whether your sensor is present: `find /sys/bus/acpi/devices -name 'GXFP5130*'`
 
@@ -157,15 +165,15 @@ transport; userspace sees a simple read/write character device.
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| No `GXFP5130:00` in `/sys/bus/acpi/devices` | Fingerprint reader disabled in firmware | Enable in BIOS/UEFI |
-| No `/dev/gxfp` after `modprobe gxfp` | Kernel/module version mismatch | Check `modinfo gxfp` vermagic vs `uname -r` |
-| `Operation not permitted` from fprintd | Missing `DeviceAllow` drop-in | Re-run `sudo ./scripts/install.sh`, restart fprintd |
-| TLS MAC verification failure | Host PSK ≠ sensor PSK | Re-provision with `provision-psk.sh` or extract from Windows |
-| Capture works, enrollment fails | libfprint/SIGFM layer issue | Collect `FP_GXFP_LOG=1` output and open an issue |
-| Finger-up occasionally missed | Known firmware `GF_GCC_EC_20067` quirk | Driver retries automatically; no action needed |
-| Module missing after kernel upgrade | DKMS rebuild needed | `sudo dkms autoinstall -k "$(uname -r)"` |
+| Symptom                                        | Likely cause                            | Fix                                                           |
+| ---------------------------------------------- | --------------------------------------- | ------------------------------------------------------------- |
+| No`GXFP5130:00` in `/sys/bus/acpi/devices` | Fingerprint reader disabled in firmware | Enable in BIOS/UEFI                                           |
+| No`/dev/gxfp` after `modprobe gxfp`        | Kernel/module version mismatch          | Check`modinfo gxfp` vermagic vs `uname -r`                |
+| `Operation not permitted` from fprintd       | Missing`DeviceAllow` drop-in          | Re-run`sudo ./scripts/install.sh`, restart fprintd          |
+| TLS MAC verification failure                   | Host PSK ≠ sensor PSK                  | Re-provision with`provision-psk.sh` or extract from Windows |
+| Capture works, enrollment fails                | libfprint/SIGFM layer issue             | Collect`FP_GXFP_LOG=1` output and open an issue             |
+| Finger-up occasionally missed                  | Known firmware`GF_GCC_EC_20067` quirk | Driver retries automatically; no action needed                |
+| Module missing after kernel upgrade            | DKMS rebuild needed                     | `sudo dkms autoinstall -k "$(uname -r)"`                    |
 
 ## Removal
 
@@ -196,4 +204,3 @@ The stack is experimental and is not affiliated with Goodix or Huawei.
 Kernel module: [GPL-2.0-only](LICENSE)
 libfprint fork: [LGPL-2.1+](libfprint/COPYING)
 Userspace tools: GPL-2.0-only
-
