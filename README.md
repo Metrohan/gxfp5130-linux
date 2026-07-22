@@ -1,3 +1,7 @@
+> **Project Status: Active**
+>
+> This project is actively maintained. Current priorities and planned work are documented below or in GitHub Issues.
+
 readm
 
 # Goodix GXFP5130 Linux Fingerprint Driver
