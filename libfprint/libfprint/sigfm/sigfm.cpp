@@ -28,6 +28,7 @@
 #include "opencv2/features2d.hpp"
 #include "opencv2/imgcodecs.hpp"
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -62,7 +63,9 @@ struct deserializer<SigfmImgInfo> : public std::true_type {
 namespace {
 constexpr auto distance_match = 0.75;
 constexpr auto length_match = 0.05;
-constexpr auto angle_match = 0.05;
+// Absolute angular tolerance in radians. Unlike a relative comparison, this
+// remains well-defined near zero and has uniform meaning around the circle.
+constexpr auto angle_tol_rad = 0.10;
 constexpr auto min_match = 5;
 struct match {
     cv::Point2i p1;
@@ -75,8 +78,10 @@ struct match {
     }
     bool operator<(const match& right) const
     {
-        return (this->p1.y < right.p1.y) ||
-               ((this->p1.y < right.p1.y) && this->p1.x < right.p1.x);
+        // Order the complete correspondence. Ordering by p1.y alone causes a
+        // set to discard distinct matches that happen to share a scanline.
+        return std::tie(this->p1.y, this->p1.x, this->p2.y, this->p2.x) <
+               std::tie(right.p1.y, right.p1.x, right.p2.y, right.p2.x);
     }
 };
 struct angle {
@@ -174,12 +179,17 @@ int sigfm_match_score(SigfmImgInfo* frame, SigfmImgInfo* enrolled)
                     length_match) {
 
                     double product = length_1 * length_2;
+                    auto clamp_unit = [](double value) {
+                        return std::clamp(value, -1.0, 1.0);
+                    };
                     angles.emplace_back(angle(
                         M_PI / 2 +
-                            asin((vec_1[0] * vec_2[0] + vec_1[1] * vec_2[1]) /
-                                 product),
-                        acos((vec_1[0] * vec_2[1] - vec_1[1] * vec_2[0]) /
-                             product),
+                            asin(clamp_unit((vec_1[0] * vec_2[0] +
+                                             vec_1[1] * vec_2[1]) /
+                                            product)),
+                        acos(clamp_unit((vec_1[0] * vec_2[1] -
+                                         vec_1[1] * vec_2[0]) /
+                                        product)),
                         match_1, match_2));
                 }
             }
@@ -195,12 +205,8 @@ int sigfm_match_score(SigfmImgInfo* frame, SigfmImgInfo* enrolled)
             for (std::size_t k = j + 1; k < angles.size(); k++) {
                 angle angle_2 = angles[k];
 
-                if (1 - std::min(angle_1.sin, angle_2.sin) /
-                                std::max(angle_1.sin, angle_2.sin) <=
-                        angle_match &&
-                    1 - std::min(angle_1.cos, angle_2.cos) /
-                                std::max(angle_1.cos, angle_2.cos) <=
-                        angle_match) {
+                if (std::fabs(angle_1.sin - angle_2.sin) <= angle_tol_rad &&
+                    std::fabs(angle_1.cos - angle_2.cos) <= angle_tol_rad) {
 
                     count += 1;
                 }

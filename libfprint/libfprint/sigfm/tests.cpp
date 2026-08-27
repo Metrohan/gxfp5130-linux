@@ -36,6 +36,22 @@ std::string to_str(const cv::KeyPoint& k)
     return s.str();
 }
 
+SigfmImgInfo synthetic_info(const std::vector<cv::Point2f>& points)
+{
+    constexpr auto descriptor_width = 128;
+    std::vector<cv::KeyPoint> keypoints;
+    cv::Mat descriptors = cv::Mat::zeros(
+        static_cast<int>(points.size()), descriptor_width, CV_32FC1);
+
+    keypoints.reserve(points.size());
+    for (std::size_t i = 0; i < points.size(); i++) {
+        keypoints.emplace_back(points[i], 1.0f);
+        descriptors.at<float>(static_cast<int>(i), static_cast<int>(i)) = 1.0f;
+    }
+
+    return SigfmImgInfo{keypoints, descriptors};
+}
+
 } // namespace
 
 template<typename T>
@@ -47,6 +63,45 @@ void check_vec(const std::vector<T>& vs)
         T iv;
         s >> iv;
         CHECK(i == iv);
+    }
+}
+
+TEST_SUITE("matching")
+{
+    TEST_CASE("distinct correspondences on one scanline are retained")
+    {
+        auto frame = synthetic_info({{0, 10},
+                                     {10, 10},
+                                     {20, 10},
+                                     {30, 10},
+                                     {40, 10},
+                                     {50, 10}});
+        auto enrolled = synthetic_info({{3, 17},
+                                        {13, 17},
+                                        {23, 17},
+                                        {33, 17},
+                                        {43, 17},
+                                        {53, 17}});
+
+        CHECK(sigfm_match_score(&frame, &enrolled) >= 40);
+    }
+
+    TEST_CASE("quarter-turn rotations have a finite consistent angle")
+    {
+        auto frame = synthetic_info({{0, 0},
+                                     {10, 3},
+                                     {22, 8},
+                                     {35, 15},
+                                     {49, 24},
+                                     {64, 35}});
+        auto enrolled = synthetic_info({{100, 20},
+                                        {97, 30},
+                                        {92, 42},
+                                        {85, 55},
+                                        {76, 69},
+                                        {65, 84}});
+
+        CHECK(sigfm_match_score(&frame, &enrolled) >= 40);
     }
 }
 
