@@ -46,6 +46,7 @@ struct gxfp_dev {
 		spinlock_t rxq_lock;
 		wait_queue_head_t rxq_wq;
 		struct kfifo rxq_fifo; /* bytes: [tap_hdr][payload][tap_hdr][payload]... */
+		void *rxq_buf;
 		bool rxq_inited;
 		bool rxq_reader_open;
 	} uapi;
