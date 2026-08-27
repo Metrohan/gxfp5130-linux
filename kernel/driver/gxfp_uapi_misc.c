@@ -5,6 +5,7 @@
 #include <linux/spinlock.h>
 #include <linux/wait.h>
 #include <linux/sizes.h>
+#include <linux/vmalloc.h>
 
 #include "gxfp_priv.h"
 #include "../hw/gxfp_acpi.h"
@@ -72,9 +73,15 @@ int gxfp_uapi_register(struct gxfp_dev *gdev)
 	gdev->uapi.rxq_inited = false;
 	gdev->uapi.rxq_reader_open = false;
 	fifo_bytes = GXFP_RXQ_FIFO_BYTES;
-	rc_fifo = kfifo_alloc(&gdev->uapi.rxq_fifo, fifo_bytes, GFP_KERNEL);
-	if (rc_fifo)
+	gdev->uapi.rxq_buf = kvmalloc(fifo_bytes, GFP_KERNEL);
+	if (!gdev->uapi.rxq_buf)
+		return -ENOMEM;
+	rc_fifo = kfifo_init(&gdev->uapi.rxq_fifo, gdev->uapi.rxq_buf, fifo_bytes);
+	if (rc_fifo) {
+		kvfree(gdev->uapi.rxq_buf);
+		gdev->uapi.rxq_buf = NULL;
 		return rc_fifo;
+	}
 	gdev->uapi.rxq_inited = true;
 
 	ret = misc_register(&gdev->uapi.miscdev);
@@ -88,7 +95,8 @@ int gxfp_uapi_register(struct gxfp_dev *gdev)
 
 err_fifo:
 	if (gdev->uapi.rxq_inited) {
-		kfifo_free(&gdev->uapi.rxq_fifo);
+		kvfree(gdev->uapi.rxq_buf);
+		gdev->uapi.rxq_buf = NULL;
 		gdev->uapi.rxq_inited = false;
 	}
 	return ret;
@@ -117,7 +125,8 @@ void gxfp_uapi_unregister(struct gxfp_dev *gdev)
 		spin_unlock_irqrestore(&gdev->uapi.rxq_lock, flags);
 		wake_up_interruptible_all(&gdev->uapi.rxq_wq);
 
-		kfifo_free(&gdev->uapi.rxq_fifo);
+		kvfree(gdev->uapi.rxq_buf);
+		gdev->uapi.rxq_buf = NULL;
 		mutex_unlock(&gdev->uapi.rxq_mutex);
 	}
 }
