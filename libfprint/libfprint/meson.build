@@ -254,6 +254,9 @@ if 'gxfp' in drivers
     mbedx509_dep = dependency('mbedx509')
     deps += [ mbedtls_dep, mbedcrypto_dep, mbedx509_dep ]
     drivers_cflags += [ '-DGXFP_WITH_MBEDTLS' ]
+    drivers_cflags += cc.get_supported_arguments([
+        '-Wno-error=redundant-decls',
+    ])
     deps += declare_dependency(include_directories: [
         include_directories('drivers/gxfpmoc/include'),
     ])

@@ -5,7 +5,7 @@ pkgdesc='libfprint with GXFP5130 eSPI support and SIGFM matching'
 arch=('x86_64')
 url='https://github.com/Void755/libfprint'
 license=('LGPL-2.1-or-later')
-depends=('glib2' 'libgusb' 'libgudev' 'mbedtls' 'opencv')
+depends=('glib2' 'libgusb' 'libgudev' 'mbedtls3' 'opencv')
 makedepends=('meson' 'ninja' 'cmake' 'doctest')
 provides=("libfprint=$pkgver" 'libfprint-2.so=2-64')
 conflicts=('libfprint')
@@ -19,7 +19,7 @@ prepare() {
 }
 
 build() {
-  meson setup "$srcdir/libfprint" "$srcdir/build" \
+  PKG_CONFIG_PATH=/usr/lib/mbedtls3/pkgconfig meson setup "$srcdir/libfprint" "$srcdir/build" \
     --prefix=/usr \
     --buildtype=release \
     -Ddrivers=gxfp \
