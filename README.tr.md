@@ -68,7 +68,7 @@ find /sys/bus/acpi/devices -name 'GXFP5130*'
 
 ```sh
 sudo pacman -S --needed base-devel linux-headers dkms cmake meson ninja \
-  mbedtls glib2 libgusb gusb pixman nss libgudev cairo opencv doctest fprintd
+  mbedtls3 glib2 libgusb gusb pixman nss libgudev cairo opencv doctest fprintd
 ```
 
 LTS çekirdeği kullanıyorsanız `linux-lts-headers` paketini tercih edin. Diğer

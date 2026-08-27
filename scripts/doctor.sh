@@ -29,8 +29,16 @@ for command in make cmake meson ninja dkms modinfo; do
   fi
 done
 
-if pkg-config --exists mbedtls 2>/dev/null; then
-  ok "Mbed TLS development package detected"
+mbedtls_version=$(pkg-config --modversion mbedtls 2>/dev/null) || mbedtls_version=
+case "$mbedtls_version" in
+  2.*|3.*) supported_mbedtls=1 ;;
+  *) supported_mbedtls=0 ;;
+esac
+if test "$supported_mbedtls" -eq 1 && test -f /usr/include/mbedtls/mbedtls/gcm.h; then
+  ok "Mbed TLS $mbedtls_version development package detected"
+elif test -f /usr/include/mbedtls3/mbedtls/gcm.h && \
+     PKG_CONFIG_PATH=/usr/lib/mbedtls3/pkgconfig pkg-config --exists mbedtls 2>/dev/null; then
+  ok "Mbed TLS 3 compatibility development package detected"
 else
   fail "Mbed TLS development package not detected"
 fi
