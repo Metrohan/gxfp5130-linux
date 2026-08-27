@@ -1,4 +1,22 @@
 # SPDX-License-Identifier: GPL-2.0
+ifeq ($(KBUILD_EXTMOD),)
+
+KERNELDIR ?= /lib/modules/$(shell uname -r)/build
+MODULE_DIR := $(CURDIR)
+ifeq ($(shell sed -n 's/^CONFIG_CC_IS_CLANG=y$$/y/p' $(KERNELDIR)/.config 2>/dev/null),y)
+KBUILD_TOOLCHAIN := LLVM=1
+endif
+
+.PHONY: all modules clean
+
+all modules:
+	$(MAKE) $(KBUILD_TOOLCHAIN) -C $(KERNELDIR) M=$(MODULE_DIR) CONFIG_GXFP5130=m modules
+
+clean:
+	$(MAKE) $(KBUILD_TOOLCHAIN) -C $(KERNELDIR) M=$(MODULE_DIR) clean
+
+endif
+
 obj-$(CONFIG_GXFP5130) += gxfp.o
 
 ccflags-y += -I$(src)/include
