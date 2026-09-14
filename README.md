@@ -66,7 +66,7 @@ Check whether your sensor is present: `find /sys/bus/acpi/devices -name 'GXFP513
 
 ```sh
 sudo pacman -S --needed base-devel linux-headers dkms cmake meson ninja \
-  mbedtls3 glib2 libgusb gusb pixman nss libgudev cairo opencv doctest fprintd
+  mbedtls3 glib2 glib2-devel libgusb pixman nss libgudev cairo opencv doctest fprintd
 ```
 
 Use `linux-lts-headers` if you are running the LTS kernel. Other distributions
