@@ -56,6 +56,7 @@ This package fixes that end-to-end:
 | Laptop                                     | ACPI ID         | Firmware            | Status                       |
 | ------------------------------------------ | --------------- | ------------------- | ---------------------------- |
 | Huawei MateBook D16 2024 (MCLF-XX / M1010) | `GXFP5130:00` | `GF_GCC_EC_20067` | ✅ Verified                  |
+| Huawei MateBook MCLG-XX / M1010            | `GXFP5130:00` | `GF_GCC_EC_20055` | ✅ Verified (community report) |
 | Other MateBook models with`GXFP5130:00`  | `GXFP5130:00` | unknown             | ❓ Untested — please report |
 
 Check whether your sensor is present: `find /sys/bus/acpi/devices -name 'GXFP5130*'`
@@ -66,7 +67,7 @@ Check whether your sensor is present: `find /sys/bus/acpi/devices -name 'GXFP513
 
 ```sh
 sudo pacman -S --needed base-devel linux-headers dkms cmake meson ninja \
-  mbedtls3 glib2 libgusb gusb pixman nss libgudev cairo opencv doctest fprintd
+  mbedtls3 glib2 glib2-devel libgusb pixman nss libgudev cairo opencv doctest fprintd
 ```
 
 Use `linux-lts-headers` if you are running the LTS kernel. Other distributions
@@ -177,6 +178,7 @@ transport; userspace sees a simple read/write character device.
 | TLS MAC verification failure                   | Host PSK ≠ sensor PSK                  | Re-provision with`provision-psk.sh` or extract from Windows |
 | Capture works, enrollment fails                | libfprint/SIGFM layer issue             | Collect`FP_GXFP_LOG=1` output and open an issue             |
 | Finger-up occasionally missed                  | Known firmware`GF_GCC_EC_20067` quirk | Driver retries automatically; no action needed                |
+| First enroll attempt fails ~13s in, before any finger prompt: `fdt wait-up retry failed: Connection timed out` | Observed once on FW `GF_GCC_EC_20055`; root cause not confirmed | Reboot and retry. If it recurs, in addition to `FP_GXFP_LOG=1`, capture the kernel-side trace: `echo 1 \| sudo tee /sys/kernel/debug/gxfp/trace_enable`, reproduce, then `sudo cat /sys/kernel/debug/gxfp/trace_dump`, and attach both to an issue |
 | Module missing after kernel upgrade            | DKMS rebuild needed                     | `sudo dkms autoinstall -k "$(uname -r)"`                    |
 
 ## Removal

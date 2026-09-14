@@ -43,6 +43,27 @@ else
   fail "Mbed TLS development package not detected"
 fi
 
+for pc_module in gusb pixman-1 nss gudev-1.0 cairo; do
+  if pkg-config --exists "$pc_module" 2>/dev/null; then
+    ok "pkg-config module available: $pc_module"
+  else
+    fail "missing pkg-config module: $pc_module"
+  fi
+done
+
+if pkg-config --exists opencv5 2>/dev/null || pkg-config --exists opencv4 2>/dev/null; then
+  ok "pkg-config module available: opencv"
+else
+  fail "missing pkg-config module: opencv (opencv5 or opencv4)"
+fi
+
+glib_mkenums=$(pkg-config --variable=glib_mkenums glib-2.0 2>/dev/null) || glib_mkenums=
+if test -n "$glib_mkenums" && test -x "$glib_mkenums"; then
+  ok "GLib codegen tools available ($glib_mkenums)"
+else
+  fail "glib-2.0 codegen tools missing (install glib2-devel on Arch)"
+fi
+
 if test -f "$ROOT/kernel/gxfp.ko"; then
   built_kernel=$(modinfo -F vermagic "$ROOT/kernel/gxfp.ko" 2>/dev/null | awk '{print $1}')
   if test "$built_kernel" = "$(uname -r)"; then

@@ -6,7 +6,7 @@ arch=('x86_64')
 url='https://github.com/Void755/libfprint'
 license=('LGPL-2.1-or-later')
 depends=('glib2' 'libgusb' 'libgudev' 'mbedtls3' 'opencv')
-makedepends=('meson' 'ninja' 'cmake' 'doctest')
+makedepends=('meson' 'ninja' 'cmake' 'doctest' 'glib2-devel')
 provides=("libfprint=$pkgver" 'libfprint-2.so=2-64')
 conflicts=('libfprint')
 options=('!debug')

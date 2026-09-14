@@ -54,6 +54,7 @@ Bu paket sorunu uçtan uca çözüyor:
 | Dizüstü | ACPI ID | Donanım Yazılımı | Durum |
 |---|---|---|---|
 | Huawei MateBook D16 2024 (MCLF-XX / M1010) | `GXFP5130:00` | `GF_GCC_EC_20067` | ✅ Doğrulandı |
+| Huawei MateBook MCLG-XX / M1010 | `GXFP5130:00` | `GF_GCC_EC_20055` | ✅ Doğrulandı (topluluk raporu) |
 | GXFP5130:00 bulunan diğer MateBook modelleri | `GXFP5130:00` | bilinmiyor | ❓ Test edilmedi — lütfen bildirin |
 
 Sensörün mevcut olup olmadığını kontrol etmek için:
@@ -68,7 +69,7 @@ find /sys/bus/acpi/devices -name 'GXFP5130*'
 
 ```sh
 sudo pacman -S --needed base-devel linux-headers dkms cmake meson ninja \
-  mbedtls3 glib2 libgusb gusb pixman nss libgudev cairo opencv doctest fprintd
+  mbedtls3 glib2 glib2-devel libgusb pixman nss libgudev cairo opencv doctest fprintd
 ```
 
 LTS çekirdeği kullanıyorsanız `linux-lts-headers` paketini tercih edin. Diğer
@@ -180,6 +181,7 @@ kullanıcı alanı basit bir okuma/yazma karakter aygıtı görür.
 | TLS MAC doğrulama hatası | Ana PSK sensör PSK'sıyla eşleşmiyor | `provision-psk.sh` ile yeniden yükleyin veya Windows'tan çıkarın |
 | Yakalama çalışıyor, kayıt başarısız | libfprint/SIGFM katman sorunu | `FP_GXFP_LOG=1` çıktısı toplayın ve bir sorun bildirin |
 | Parmak kaldırma zaman zaman algılanmıyor | `GF_GCC_EC_20067` donanım yazılımı özgünlüğü | Sürücü otomatik yeniden deniyor; işlem gerekmez |
+| İlk kayıt denemesi parmak istemeden ~13sn içinde başarısız oluyor: `fdt wait-up retry failed: Connection timed out` | `GF_GCC_EC_20055` donanım yazılımında bir kez gözlendi; kök neden doğrulanmadı | Yeniden başlatıp tekrar deneyin. Tekrarlarsa `FP_GXFP_LOG=1`'e ek olarak çekirdek tarafı izini de toplayın: `echo 1 \| sudo tee /sys/kernel/debug/gxfp/trace_enable`, tekrar üretin, sonra `sudo cat /sys/kernel/debug/gxfp/trace_dump`; ikisini de bir sorun bildirimine ekleyin |
 | Çekirdek yükseltmesinden sonra modül yok | DKMS yeniden derleme gerekiyor | `sudo dkms autoinstall -k "$(uname -r)"` |
 
 ## Kaldırma
