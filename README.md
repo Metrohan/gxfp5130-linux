@@ -57,7 +57,14 @@ This package fixes that end-to-end:
 | ------------------------------------------ | --------------- | ------------------- | ---------------------------- |
 | Huawei MateBook D16 2024 (MCLF-XX / M1010) | `GXFP5130:00` | `GF_GCC_EC_20067` | ✅ Verified                  |
 | Huawei MateBook MCLG-XX / M1010            | `GXFP5130:00` | `GF_GCC_EC_20055` | ✅ Verified (community report) |
+| Huawei MateBook 14 2022 (KLVF-XX / M1010)  | `GXFP5130:00` | `GF_GCC_EC_20040` | ⚠️ Partial (community report) — see note below |
 | Other MateBook models with`GXFP5130:00`  | `GXFP5130:00` | unknown             | ❓ Untested — please report |
+
+On the MateBook 14 2022 (FW `GF_GCC_EC_20040`), one reporter found verify to be
+placement-sensitive: centered full-pad presses match, but partial edge/tip
+captures don't. Enrollment also took more passes than usual (~17). Likely
+related to the sensor's small capture area; re-enroll using full-pad centered
+presses if you see this.
 
 Check whether your sensor is present: `find /sys/bus/acpi/devices -name 'GXFP5130*'`
 
@@ -179,6 +186,7 @@ transport; userspace sees a simple read/write character device.
 | Capture works, enrollment fails                | libfprint/SIGFM layer issue             | Collect`FP_GXFP_LOG=1` output and open an issue             |
 | Finger-up occasionally missed                  | Known firmware`GF_GCC_EC_20067` quirk | Driver retries automatically; no action needed                |
 | First enroll attempt fails ~13s in, before any finger prompt: `fdt wait-up retry failed: Connection timed out` | Observed once on FW `GF_GCC_EC_20055`; root cause not confirmed | Reboot and retry. If it recurs, in addition to `FP_GXFP_LOG=1`, capture the kernel-side trace: `echo 1 \| sudo tee /sys/kernel/debug/gxfp/trace_enable`, reproduce, then `sudo cat /sys/kernel/debug/gxfp/trace_dump`, and attach both to an issue |
+| Verify matches on centered full-pad presses but not on edge/tip captures | Small sensor area, placement-sensitive (observed on FW `GF_GCC_EC_20040`) | Re-enroll using full-pad centered presses; avoid partial/edge captures |
 | Module missing after kernel upgrade            | DKMS rebuild needed                     | `sudo dkms autoinstall -k "$(uname -r)"`                    |
 
 ## Removal

@@ -55,7 +55,14 @@ Bu paket sorunu uçtan uca çözüyor:
 |---|---|---|---|
 | Huawei MateBook D16 2024 (MCLF-XX / M1010) | `GXFP5130:00` | `GF_GCC_EC_20067` | ✅ Doğrulandı |
 | Huawei MateBook MCLG-XX / M1010 | `GXFP5130:00` | `GF_GCC_EC_20055` | ✅ Doğrulandı (topluluk raporu) |
+| Huawei MateBook 14 2022 (KLVF-XX / M1010) | `GXFP5130:00` | `GF_GCC_EC_20040` | ⚠️ Kısmi (topluluk raporu) — aşağıdaki nota bakın |
 | GXFP5130:00 bulunan diğer MateBook modelleri | `GXFP5130:00` | bilinmiyor | ❓ Test edilmedi — lütfen bildirin |
+
+MateBook 14 2022'de (FW `GF_GCC_EC_20040`) bir kullanıcı doğrulamanın konuma
+duyarlı olduğunu bildirdi: tam-pad merkez basışlar eşleşiyor, ama kısmi
+kenar/uç basışlar eşleşmiyor. Kayıt da normalden fazla pas gerektirdi
+(~17). Sensörün küçük yakalama alanıyla ilişkili olabilir; bu durumu
+görürseniz tam-pad merkez basışlarla yeniden kayıt yapın.
 
 Sensörün mevcut olup olmadığını kontrol etmek için:
 
@@ -182,6 +189,7 @@ kullanıcı alanı basit bir okuma/yazma karakter aygıtı görür.
 | Yakalama çalışıyor, kayıt başarısız | libfprint/SIGFM katman sorunu | `FP_GXFP_LOG=1` çıktısı toplayın ve bir sorun bildirin |
 | Parmak kaldırma zaman zaman algılanmıyor | `GF_GCC_EC_20067` donanım yazılımı özgünlüğü | Sürücü otomatik yeniden deniyor; işlem gerekmez |
 | İlk kayıt denemesi parmak istemeden ~13sn içinde başarısız oluyor: `fdt wait-up retry failed: Connection timed out` | `GF_GCC_EC_20055` donanım yazılımında bir kez gözlendi; kök neden doğrulanmadı | Yeniden başlatıp tekrar deneyin. Tekrarlarsa `FP_GXFP_LOG=1`'e ek olarak çekirdek tarafı izini de toplayın: `echo 1 \| sudo tee /sys/kernel/debug/gxfp/trace_enable`, tekrar üretin, sonra `sudo cat /sys/kernel/debug/gxfp/trace_dump`; ikisini de bir sorun bildirimine ekleyin |
+| Tam-pad merkez basışlarda eşleşiyor ama kenar/uç basışlarda eşleşmiyor | Küçük sensör alanı, konuma duyarlı (FW `GF_GCC_EC_20040`'ta gözlendi) | Tam-pad merkez basışlarla yeniden kayıt yapın; kısmi/kenar basışlardan kaçının |
 | Çekirdek yükseltmesinden sonra modül yok | DKMS yeniden derleme gerekiyor | `sudo dkms autoinstall -k "$(uname -r)"` |
 
 ## Kaldırma
