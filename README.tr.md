@@ -154,6 +154,53 @@ timeout bekleyip sonra şifreye düştüğü için giriş çok yavaş olur.
 Aynı değişikliği `/etc/pam.d/system-login` dosyasına eklemek ekran yöneticisini
 de kapsar.
 
+## Fedora / SELinux (enforcing)
+
+SELinux'u varsayılan olarak enforcing gelen dağıtımlarda (Fedora) `fprintd`,
+PSK dosyasına ve `/dev/gxfp`'ye erişimden reddedilir; kayıt
+`read PSK ... failed: Permission denied` ile başarısız olur. `setenforce 0`
+her şeyi çalıştırdığı için bu bir sürücü değil, politika sorunudur. Teşhis ve
+çözüm [@TarekELz'in #8 numaralı issue'sundan](https://github.com/Metrohan/gxfp5130-linux/issues/8)
+alınmıştır; raportör Fedora 44'te (MateBook 14 2022, FW `GF_GCC_EC_20040`)
+doğrulamıştır. **Bakımcı tarafından henüz test edilmedi.**
+
+İki etiket eksik:
+
+1. PSK dizini `/var/lib/fprintd/gxfp/`, Fedora'nın fprintd kuralının
+   (`/var/lib/fprint`, sonunda `d` yok) dışında kalır ve `var_lib_t` olarak
+   kalır. Tek başına `restorecon` hiçbir şey değiştirmez. Önce kural ekleyin:
+
+   ```sh
+   sudo semanage fcontext -a -t fprintd_var_lib_t '/var/lib/fprintd(/.*)?'
+   sudo restorecon -Rv /var/lib/fprintd
+   ```
+
+2. `/dev/gxfp`'nin SELinux tipi yoktur ve `device_t`'ye düşer. Yukarıdaki
+   issue'dan alınan minimal bir yerel politika modülü tip tanımlar.
+   `gxfp_local.te` olarak kaydedin:
+
+   ```
+   policy_module(gxfp_local, 1.0.0)
+
+   require {
+   	type fprintd_t;
+   }
+
+   type gxfp_device_t;
+   dev_node(gxfp_device_t)
+
+   allow fprintd_t gxfp_device_t:chr_file { getattr open read write ioctl };
+   ```
+
+   ```sh
+   make -f /usr/share/selinux/devel/Makefile gxfp_local.pp   # selinux-policy-devel gerekir
+   sudo semodule -i gxfp_local.pp
+   sudo semanage fcontext -a -t gxfp_device_t '/dev/gxfp'
+   sudo restorecon -v /dev/gxfp
+   ```
+
+Kalan reddleri `sudo ausearch -m avc -ts recent` ile kontrol edin.
+
 ## Mimari
 
 ```
@@ -190,6 +237,7 @@ kullanıcı alanı basit bir okuma/yazma karakter aygıtı görür.
 | Parmak kaldırma zaman zaman algılanmıyor | `GF_GCC_EC_20067` donanım yazılımı özgünlüğü | Sürücü otomatik yeniden deniyor; işlem gerekmez |
 | İlk kayıt denemesi parmak istemeden ~13sn içinde başarısız oluyor: `fdt wait-up retry failed: Connection timed out` | `GF_GCC_EC_20055` donanım yazılımında bir kez gözlendi; kök neden doğrulanmadı | Yeniden başlatıp tekrar deneyin. Tekrarlarsa `FP_GXFP_LOG=1`'e ek olarak çekirdek tarafı izini de toplayın: `echo 1 \| sudo tee /sys/kernel/debug/gxfp/trace_enable`, tekrar üretin, sonra `sudo cat /sys/kernel/debug/gxfp/trace_dump`; ikisini de bir sorun bildirimine ekleyin |
 | Tam-pad merkez basışlarda eşleşiyor ama kenar/uç basışlarda eşleşmiyor | Küçük sensör alanı, konuma duyarlı (FW `GF_GCC_EC_20040`'ta gözlendi) | Tam-pad merkez basışlarla yeniden kayıt yapın; kısmi/kenar basışlardan kaçının |
+| Fedora'da `fprintd` için `read PSK ... Permission denied` veya `avc: denied` | SELinux enforcing; PSK yolu ve `/dev/gxfp` `fprintd_t` için etiketsiz | Bkz. [Fedora / SELinux](#fedora--selinux-enforcing) |
 | Çekirdek yükseltmesinden sonra modül yok | DKMS yeniden derleme gerekiyor | `sudo dkms autoinstall -k "$(uname -r)"` |
 
 ## Kaldırma

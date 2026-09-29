@@ -151,6 +151,52 @@ password auth.
 
 The same change in `/etc/pam.d/system-login` covers the display manager.
 
+## Fedora / SELinux (enforcing)
+
+On distributions that ship SELinux enforcing (Fedora), `fprintd` is denied
+access to the PSK and to `/dev/gxfp`, and enrollment fails with
+`read PSK ... failed: Permission denied`. `setenforce 0` makes it work, so this
+is a policy problem, not a driver problem. Diagnosed and worked out by
+[@TarekELz in #8](https://github.com/Metrohan/gxfp5130-linux/issues/8), verified
+by the reporter on Fedora 44 (MateBook 14 2022, FW `GF_GCC_EC_20040`). **Not
+yet tested by the maintainer.**
+
+Two labels are missing:
+
+1. The PSK directory `/var/lib/fprintd/gxfp/` is outside Fedora's fprintd rule
+   (`/var/lib/fprint`, no trailing `d`), so it stays `var_lib_t`. `restorecon`
+   alone changes nothing. Add a rule first:
+
+   ```sh
+   sudo semanage fcontext -a -t fprintd_var_lib_t '/var/lib/fprintd(/.*)?'
+   sudo restorecon -Rv /var/lib/fprintd
+   ```
+
+2. `/dev/gxfp` has no SELinux type and falls back to `device_t`. A minimal local
+   policy module (from the issue above) defines one. Save as `gxfp_local.te`:
+
+   ```
+   policy_module(gxfp_local, 1.0.0)
+
+   require {
+   	type fprintd_t;
+   }
+
+   type gxfp_device_t;
+   dev_node(gxfp_device_t)
+
+   allow fprintd_t gxfp_device_t:chr_file { getattr open read write ioctl };
+   ```
+
+   ```sh
+   make -f /usr/share/selinux/devel/Makefile gxfp_local.pp   # needs selinux-policy-devel
+   sudo semodule -i gxfp_local.pp
+   sudo semanage fcontext -a -t gxfp_device_t '/dev/gxfp'
+   sudo restorecon -v /dev/gxfp
+   ```
+
+Check for remaining denials with `sudo ausearch -m avc -ts recent`.
+
 ## Architecture
 
 ```
@@ -187,6 +233,7 @@ transport; userspace sees a simple read/write character device.
 | Finger-up occasionally missed                  | Known firmware`GF_GCC_EC_20067` quirk | Driver retries automatically; no action needed                |
 | First enroll attempt fails ~13s in, before any finger prompt: `fdt wait-up retry failed: Connection timed out` | Observed once on FW `GF_GCC_EC_20055`; root cause not confirmed | Reboot and retry. If it recurs, in addition to `FP_GXFP_LOG=1`, capture the kernel-side trace: `echo 1 \| sudo tee /sys/kernel/debug/gxfp/trace_enable`, reproduce, then `sudo cat /sys/kernel/debug/gxfp/trace_dump`, and attach both to an issue |
 | Verify matches on centered full-pad presses but not on edge/tip captures | Small sensor area, placement-sensitive (observed on FW `GF_GCC_EC_20040`) | Re-enroll using full-pad centered presses; avoid partial/edge captures |
+| `read PSK ... Permission denied` or `avc: denied` for `fprintd` on Fedora | SELinux enforcing; PSK path and `/dev/gxfp` unlabeled for `fprintd_t` | See [Fedora / SELinux](#fedora--selinux-enforcing) |
 | Module missing after kernel upgrade            | DKMS rebuild needed                     | `sudo dkms autoinstall -k "$(uname -r)"`                    |
 
 ## Removal

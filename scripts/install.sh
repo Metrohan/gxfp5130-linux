@@ -28,6 +28,7 @@ install -o root -g root -Dm0644 "$ROOT/config/fprintd-gxfp.conf" \
   /etc/systemd/system/fprintd.service.d/gxfp.conf
 
 udevadm control --reload-rules
+udevadm trigger --subsystem-match=misc
 systemctl daemon-reload
 depmod -a
 echo "Installed. Run: modprobe gxfp && $ROOT/scripts/verify.sh"
