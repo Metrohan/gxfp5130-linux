@@ -244,6 +244,15 @@ README'de listelenmeyen bir MateBook modelinde sürücü çalışıyorsa, lütfe
 [uyumluluk raporu](https://github.com/Metrohan/gxfp5130-linux/issues/new?template=compatibility_report.yml)
 açın — iki dakika sürer ve aynı donanıma sahip herkese yardımcı olur.
 
+## Katkıda Bulunanlar
+
+- [**nawka12**](https://github.com/nawka12): güncel Arch derleme düzeltmeleri (harici/DKMS
+  modül derlemesi, Mbed TLS 3, RX kuyruğu ayırma) ve SIGFM eşleştirme düzeltmeleri
+  ([#3](https://github.com/Metrohan/gxfp5130-linux/pull/3))
+- [**TarekELz**](https://github.com/TarekELz): Fedora/SELinux raporu ve testi
+  ([#8](https://github.com/Metrohan/gxfp5130-linux/issues/8)), `gxfp_local.te` politika
+  modülü ([#9](https://github.com/Metrohan/gxfp5130-linux/pull/9))
+
 ## Lisans
 
 Çekirdek modülü: [GPL-2.0-only](LICENSE)

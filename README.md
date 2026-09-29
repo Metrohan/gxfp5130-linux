@@ -241,6 +241,15 @@ If the driver works on a MateBook model not listed above, please open a
 [compatibility report](https://github.com/Metrohan/gxfp5130-linux/issues/new?template=compatibility_report.yml)
 — it takes two minutes and helps everyone with the same hardware.
 
+## Contributors
+
+- [**nawka12**](https://github.com/nawka12): modern Arch build fixes (external/DKMS module
+  build, Mbed TLS 3, RX queue allocation) and SIGFM matching fixes
+  ([#3](https://github.com/Metrohan/gxfp5130-linux/pull/3))
+- [**TarekELz**](https://github.com/TarekELz): Fedora/SELinux report and testing
+  ([#8](https://github.com/Metrohan/gxfp5130-linux/issues/8)), `gxfp_local.te` policy
+  module ([#9](https://github.com/Metrohan/gxfp5130-linux/pull/9))
+
 ## Upstream provenance
 
 - Kernel transport: [`Void755/gxfp_linux_driver`](https://github.com/Void755/gxfp_linux_driver), snapshot `594c372`
