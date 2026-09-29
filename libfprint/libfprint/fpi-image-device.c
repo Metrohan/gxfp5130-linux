@@ -233,6 +233,57 @@ fp_image_device_maybe_complete_action (FpImageDevice *self, GError *error)
     }
 }
 
+/* Rolling samples kept after the enrolled ones, and how far above the match
+ * threshold a scan must score before it is added to the template. */
+#define SIGFM_ADAPT_EXTRA_SAMPLES   8
+#define SIGFM_ADAPT_SCORE_FACTOR    3
+
+/* After a SIGFM match, fold the scan into @template and write it back.
+ * fprintd only saves prints at enroll time, so this writes to its store
+ * directly. ponytail: hardcodes fprintd's file-storage layout
+ * (/var/lib/fprint/<user>/<driver>/<device-id>/<finger>); move the save into
+ * fprintd if it ever gains a template-update call. */
+static void
+fpi_image_device_sigfm_adapt (FpImageDevice *self, FpPrint *template, FpPrint *print)
+{
+  FpImageDevicePrivate *priv = fp_image_device_get_instance_private (self);
+  g_autoptr(GError) error = NULL;
+  g_autofree guchar *data = NULL;
+  g_autofree gchar *finger = NULL;
+  g_autofree gchar *path = NULL;
+  gsize len;
+
+  if (!fp_print_get_username (template) || !fp_print_get_driver (template) ||
+      !fp_print_get_device_id (template))
+    return;
+
+  if (!fpi_print_sigfm_adapt (template, print,
+                              fp_device_get_nr_enroll_stages (FP_DEVICE (self)),
+                              SIGFM_ADAPT_EXTRA_SAMPLES,
+                              priv->bz3_threshold * SIGFM_ADAPT_SCORE_FACTOR))
+    return;
+
+  finger = g_strdup_printf ("%d", fp_print_get_finger (template));
+  path = g_build_filename ("/var/lib/fprint",
+                           fp_print_get_username (template),
+                           fp_print_get_driver (template),
+                           fp_print_get_device_id (template),
+                           finger, NULL);
+
+  /* Only update prints fprintd already stores; never create new ones. */
+  if (!g_file_test (path, G_FILE_TEST_IS_REGULAR))
+    {
+      fp_dbg ("sigfm adapt: %s not found, not saving", path);
+      return;
+    }
+
+  if (!fp_print_serialize (template, &data, &len, &error) ||
+      !g_file_set_contents (path, (gchar *) data, len, &error))
+    g_warning ("sigfm adapt: could not save %s: %s", path, error->message);
+  else
+    fp_dbg ("sigfm adapt: saved %s", path);
+}
+
 static void
 fpi_image_device_minutiae_detected (GObject *source_object, GAsyncResult *res, gpointer user_data)
 {
@@ -337,6 +388,9 @@ fpi_image_device_minutiae_detected (GObject *source_object, GAsyncResult *res, g
           result = FPI_MATCH_ERROR;
         }
 
+      if (result == FPI_MATCH_SUCCESS && priv->algorithm == FPI_PRINT_SIGFM)
+        fpi_image_device_sigfm_adapt (self, template, print);
+
       if (!error || error->domain == FP_DEVICE_RETRY)
         fpi_device_verify_report (device, result, g_steal_pointer (&print), g_steal_pointer (&error));
 
@@ -367,6 +421,9 @@ fpi_image_device_minutiae_detected (GObject *source_object, GAsyncResult *res, g
               break;
             }
         }
+
+      if (result && priv->algorithm == FPI_PRINT_SIGFM)
+        fpi_image_device_sigfm_adapt (self, result, print);
 
       if (!error || error->domain == FP_DEVICE_RETRY)
         fpi_device_identify_report (device, result, g_steal_pointer (&print), g_steal_pointer (&error));

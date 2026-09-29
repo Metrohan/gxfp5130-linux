@@ -313,6 +313,49 @@ fpi_print_sigfm_match (FpPrint * template, FpPrint * print,
 }
 
 /**
+ * fpi_print_sigfm_adapt:
+ * @template: A #FPI_PRINT_SIGFM #FpPrint that @print just matched
+ * @print: The newly scanned #FpPrint (exactly one print)
+ * @fixed: Number of leading samples that are never replaced (the enrollment)
+ * @extra: Number of rolling samples kept after the fixed ones
+ * @min_score: Best score @print needs against @template to be added
+ *
+ * Template update: appends @print to @template so the print follows slow
+ * changes in the finger's appearance, replacing the oldest rolling sample
+ * once @extra are stored. Only confident matches are added, so a marginal
+ * false accept cannot pull the template toward another finger.
+ *
+ * Returns: %TRUE if @template was changed
+ */
+gboolean
+fpi_print_sigfm_adapt (FpPrint *template, FpPrint *print,
+                       guint fixed, guint extra, gint min_score)
+{
+  SigfmImgInfo *probe;
+  int best = 0;
+
+  if (template->type != FPI_PRINT_SIGFM || print->type != FPI_PRINT_SIGFM ||
+      print->prints->len != 1)
+    return FALSE;
+
+  probe = g_ptr_array_index (print->prints, 0);
+  for (guint i = 0; i < template->prints->len; i++)
+    best = MAX (best, sigfm_match_score (g_ptr_array_index (template->prints, i), probe));
+
+  if (best < min_score)
+    {
+      fp_dbg ("sigfm adapt: best score %d < %d, template unchanged", best, min_score);
+      return FALSE;
+    }
+
+  if (template->prints->len >= fixed + extra)
+    g_ptr_array_remove_index (template->prints, fixed);
+  g_ptr_array_add (template->prints, sigfm_copy_info (probe));
+  fp_dbg ("sigfm adapt: best score %d, template now %u samples", best, template->prints->len);
+  return TRUE;
+}
+
+/**
  * fpi_print_generate_user_id:
  * @print: #FpPrint to generate the ID for
  *
