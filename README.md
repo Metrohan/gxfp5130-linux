@@ -173,22 +173,11 @@ Two labels are missing:
    ```
 
 2. `/dev/gxfp` has no SELinux type and falls back to `device_t`. A minimal local
-   policy module (from the issue above) defines one. Save as `gxfp_local.te`:
-
-   ```
-   policy_module(gxfp_local, 1.0.0)
-
-   require {
-   	type fprintd_t;
-   }
-
-   type gxfp_device_t;
-   dev_node(gxfp_device_t)
-
-   allow fprintd_t gxfp_device_t:chr_file { getattr open read write ioctl };
-   ```
+   policy module (from the issue above) defines one. It ships in this repo as
+   [`config/selinux/gxfp_local.te`](config/selinux/gxfp_local.te):
 
    ```sh
+   cd config/selinux
    make -f /usr/share/selinux/devel/Makefile gxfp_local.pp   # needs selinux-policy-devel
    sudo semodule -i gxfp_local.pp
    sudo semanage fcontext -a -t gxfp_device_t '/dev/gxfp'

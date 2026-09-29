@@ -176,23 +176,11 @@ doğrulamıştır. **Bakımcı tarafından henüz test edilmedi.**
    ```
 
 2. `/dev/gxfp`'nin SELinux tipi yoktur ve `device_t`'ye düşer. Yukarıdaki
-   issue'dan alınan minimal bir yerel politika modülü tip tanımlar.
-   `gxfp_local.te` olarak kaydedin:
-
-   ```
-   policy_module(gxfp_local, 1.0.0)
-
-   require {
-   	type fprintd_t;
-   }
-
-   type gxfp_device_t;
-   dev_node(gxfp_device_t)
-
-   allow fprintd_t gxfp_device_t:chr_file { getattr open read write ioctl };
-   ```
+   issue'dan alınan minimal bir yerel politika modülü tip tanımlar. Bu depoda
+   [`config/selinux/gxfp_local.te`](config/selinux/gxfp_local.te) olarak bulunur:
 
    ```sh
+   cd config/selinux
    make -f /usr/share/selinux/devel/Makefile gxfp_local.pp   # selinux-policy-devel gerekir
    sudo semodule -i gxfp_local.pp
    sudo semanage fcontext -a -t gxfp_device_t '/dev/gxfp'

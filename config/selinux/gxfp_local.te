@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# Local SELinux policy for the GXFP5130 character device.
+# Without it, fprintd_t is denied open/ioctl on /dev/gxfp, which falls back
+# to the generic device_t. See https://github.com/Metrohan/gxfp5130-linux/issues/8
+
+policy_module(gxfp_local, 1.0.0)
+
+require {
+	type fprintd_t;
+}
+
+type gxfp_device_t;
+dev_node(gxfp_device_t)
+
+allow fprintd_t gxfp_device_t:chr_file { getattr open read write ioctl };
