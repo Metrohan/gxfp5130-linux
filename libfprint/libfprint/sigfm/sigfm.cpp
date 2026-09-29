@@ -61,7 +61,10 @@ struct deserializer<SigfmImgInfo> : public std::true_type {
 } // namespace bin
 
 namespace {
-constexpr auto distance_match = 0.75;
+// Looser than Lowe's usual 0.75: on the small GXFP5130 patch the ridges are
+// periodic, so a correct match often has a close runner-up. 0.75 lost every
+// next-day match; 0.85 kept 0/15 wrong-finger attempts (best score 3 of 40).
+constexpr auto distance_match = 0.85;
 constexpr auto length_match = 0.05;
 // Absolute angular tolerance in radians. Unlike a relative comparison, this
 // remains well-defined near zero and has uniform meaning around the circle.
@@ -124,6 +127,9 @@ SigfmImgInfo* sigfm_extract(const SigfmPix* pix, int width, int height)
     cv::Mat img;
     img.create(height, width, CV_8UC1);
     std::memcpy(img.data, pix, width * height);
+    // Even out local contrast so keypoints follow ridges rather than
+    // day-to-day skin moisture.
+    cv::createCLAHE(2.0, cv::Size{4, 4})->apply(img, img);
     const auto roi = cv::Mat::ones(cv::Size{img.size[1], img.size[0]}, CV_8UC1);
     std::vector<cv::KeyPoint> pts;
 
