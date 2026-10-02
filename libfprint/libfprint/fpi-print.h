@@ -52,11 +52,11 @@ FpiMatchResult fpi_print_bz3_match (FpPrint *temp,
 FpiMatchResult fpi_print_sigfm_match (FpPrint * template, FpPrint * print,
                                     gint bz3_threshold, GError * *error);
 
-gboolean fpi_print_sigfm_adapt (FpPrint *template,
+FpPrint *fpi_print_sigfm_adapt (FpPrint *template,
                                 FpPrint *print,
-                                guint    fixed,
-                                guint    extra,
-                                gint     min_score);
+                                gint     threshold,
+                                guint    min_support,
+                                guint    max_adapted);
 
 /* Helpers to encode metadata into user ID strings. */
 gchar * fpi_print_generate_user_id (FpPrint * print);

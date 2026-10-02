@@ -678,8 +678,11 @@ fp_print_serialize (FpPrint *print,
   else
     g_variant_builder_add (&builder, "i", G_MININT32);
 
-  /* Unused a{sv} for expansion */
+  /* a{sv} for expansion; older versions ignore it */
   g_variant_builder_open (&builder, G_VARIANT_TYPE_VARDICT);
+  if (print->type == FPI_PRINT_SIGFM && print->sigfm_adapted > 0)
+    g_variant_builder_add (&builder, "{sv}", "sigfm-adapted",
+                           g_variant_new_uint32 (print->sigfm_adapted));
   g_variant_builder_close (&builder);
 
   /* Insert NBIS print data for type NBIS, otherwise the GVariant directly */
@@ -787,6 +790,7 @@ fp_print_deserialize (const guchar *data,
   g_autoptr(GVariant) raw_value = NULL;
   g_autoptr(GVariant) value = NULL;
   g_autoptr(GVariant) print_data = NULL;
+  g_autoptr(GVariant) extra = NULL;
   g_autoptr(GDate) date = NULL;
   guchar *aligned_data = NULL;
   guint8 finger_int8;
@@ -837,7 +841,7 @@ fp_print_deserialize (const guchar *data,
                  &username,
                  &description,
                  &julian_date,
-                 NULL,
+                 &extra,
                  &print_data);
 
   finger = finger_int8;
@@ -920,6 +924,9 @@ fp_print_deserialize (const guchar *data,
 
           g_ptr_array_add (result->prints, g_steal_pointer (&sigfm_info));
         }
+
+      if (g_variant_lookup (extra, "sigfm-adapted", "u", &result->sigfm_adapted))
+        result->sigfm_adapted = MIN (result->sigfm_adapted, result->prints->len);
     }
   else if (type == FPI_PRINT_RAW)
     {

@@ -233,12 +233,14 @@ fp_image_device_maybe_complete_action (FpImageDevice *self, GError *error)
     }
 }
 
-/* Rolling samples kept after the enrolled ones, and how far above the match
- * threshold a scan must score before it is added to the template. */
-#define SIGFM_ADAPT_EXTRA_SAMPLES   8
-#define SIGFM_ADAPT_SCORE_FACTOR    3
+/* Template update: a scan is added only if this many enrolled samples match
+ * it, and at most SIGFM_ADAPT_MAX_SAMPLES added samples are kept. Offline,
+ * genuine scans from the day before enrollment had 0-6 supporting samples
+ * (out of 16) and wrong-finger scans none. */
+#define SIGFM_ADAPT_MIN_SUPPORT  3
+#define SIGFM_ADAPT_MAX_SAMPLES  8
 
-/* After a SIGFM match, fold the scan into @template and write it back.
+/* After a SIGFM match, add the scan to @template and write it back.
  * fprintd only saves prints at enroll time, so this writes to its store
  * directly. ponytail: hardcodes fprintd's file-storage layout
  * (/var/lib/fprint/<user>/<driver>/<device-id>/<finger>); move the save into
@@ -247,6 +249,7 @@ static void
 fpi_image_device_sigfm_adapt (FpImageDevice *self, FpPrint *template, FpPrint *print)
 {
   FpImageDevicePrivate *priv = fp_image_device_get_instance_private (self);
+  g_autoptr(FpPrint) updated = NULL;
   g_autoptr(GError) error = NULL;
   g_autofree guchar *data = NULL;
   g_autofree gchar *finger = NULL;
@@ -257,10 +260,9 @@ fpi_image_device_sigfm_adapt (FpImageDevice *self, FpPrint *template, FpPrint *p
       !fp_print_get_device_id (template))
     return;
 
-  if (!fpi_print_sigfm_adapt (template, print,
-                              fp_device_get_nr_enroll_stages (FP_DEVICE (self)),
-                              SIGFM_ADAPT_EXTRA_SAMPLES,
-                              priv->bz3_threshold * SIGFM_ADAPT_SCORE_FACTOR))
+  updated = fpi_print_sigfm_adapt (template, print, priv->bz3_threshold,
+                                   SIGFM_ADAPT_MIN_SUPPORT, SIGFM_ADAPT_MAX_SAMPLES);
+  if (!updated)
     return;
 
   finger = g_strdup_printf ("%d", fp_print_get_finger (template));
@@ -277,7 +279,7 @@ fpi_image_device_sigfm_adapt (FpImageDevice *self, FpPrint *template, FpPrint *p
       return;
     }
 
-  if (!fp_print_serialize (template, &data, &len, &error) ||
+  if (!fp_print_serialize (updated, &data, &len, &error) ||
       !g_file_set_contents (path, (gchar *) data, len, &error))
     g_warning ("sigfm adapt: could not save %s: %s", path, error->message);
   else
