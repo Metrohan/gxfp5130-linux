@@ -12,3 +12,4 @@ libsigfm = static_library('sigfm',
         dependencies: [opencv],
 )
 sigfm_tests = executable('sigfm-tests', ['./tests.cpp'], dependencies: [doctest, opencv], link_with: [libsigfm])
+test('sigfm', sigfm_tests)
