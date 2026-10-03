@@ -220,7 +220,7 @@ kullanıcı alanı basit bir okuma/yazma karakter aygıtı görür.
 | `/sys/bus/acpi/devices` altında `GXFP5130:00` yok | BIOS'ta parmak izi okuyucu kapalı | BIOS/UEFI'den etkinleştirin |
 | `modprobe gxfp` sonrası `/dev/gxfp` yok | Çekirdek/modül sürüm uyumsuzluğu | `modinfo gxfp` vermagic ile `uname -r` karşılaştırın |
 | fprintd'den `Operation not permitted` | `DeviceAllow` drop-in eksik | `sudo ./scripts/install.sh` çalıştırın, fprintd'yi yeniden başlatın |
-| TLS MAC doğrulama hatası | Ana PSK sensör PSK'sıyla eşleşmiyor | `provision-psk.sh` ile yeniden yükleyin veya Windows'tan çıkarın |
+| TLS MAC doğrulama hatası | Ana PSK sensör PSK'sıyla eşleşmiyor | fprintd olmadan doğrulayın: `sudo systemctl stop fprintd && sudo gxfp_capture --psk-raw32 /var/lib/fprintd/gxfp/psk_raw32.bin`. Hâlâ başarısızsa anahtarı Windows'tan çıkarın ya da `/var/lib/fprintd/gxfp` dizinini yedekleyip `sudo ./scripts/provision-psk.sh --replace` çalıştırın (sensördeki anahtarın üzerine yazar; Windows'un anahtarı geçersiz olur) |
 | Yakalama çalışıyor, kayıt başarısız | libfprint/SIGFM katman sorunu | `FP_GXFP_LOG=1` çıktısı toplayın ve bir sorun bildirin |
 | Parmak kaldırma zaman zaman algılanmıyor | `GF_GCC_EC_20067` donanım yazılımı özgünlüğü | Sürücü otomatik yeniden deniyor; işlem gerekmez |
 | İlk kayıt denemesi parmak istemeden ~13sn içinde başarısız oluyor: `fdt wait-up retry failed: Connection timed out` | `GF_GCC_EC_20055` donanım yazılımında bir kez gözlendi; kök neden doğrulanmadı | Yeniden başlatıp tekrar deneyin. Tekrarlarsa `FP_GXFP_LOG=1`'e ek olarak çekirdek tarafı izini de toplayın: `echo 1 \| sudo tee /sys/kernel/debug/gxfp/trace_enable`, tekrar üretin, sonra `sudo cat /sys/kernel/debug/gxfp/trace_dump`; ikisini de bir sorun bildirimine ekleyin |
