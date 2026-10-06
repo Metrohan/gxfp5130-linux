@@ -44,6 +44,18 @@ test_sigfm_serialize_roundtrip (void)
   g_assert_no_error (error);
   g_assert_cmpint (loaded->type, ==, FPI_PRINT_SIGFM);
   g_assert_cmpuint (loaded->prints->len, ==, 1);
+
+  /* The restored descriptor must match the original, not just exist. */
+  SigfmImgInfo *orig_info = g_ptr_array_index (print->prints, 0);
+  SigfmImgInfo *loaded_info = g_ptr_array_index (loaded->prints, 0);
+  int orig_len, loaded_len;
+  g_autofree guchar *orig_bytes = sigfm_serialize_binary (orig_info, &orig_len);
+  g_autofree guchar *loaded_bytes = sigfm_serialize_binary (loaded_info, &loaded_len);
+
+  g_assert_cmpint (sigfm_keypoints_count (orig_info), >, 0);
+  g_assert_cmpint (sigfm_keypoints_count (loaded_info), ==, sigfm_keypoints_count (orig_info));
+  g_assert_cmpint (loaded_len, ==, orig_len);
+  g_assert_cmpmem (loaded_bytes, loaded_len, orig_bytes, orig_len);
 }
 
 int

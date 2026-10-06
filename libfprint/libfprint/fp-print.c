@@ -658,6 +658,7 @@ fp_print_serialize (FpPrint *print,
 {
   g_autoptr(GVariant) result = NULL;
   GVariantBuilder builder = G_VARIANT_BUILDER_INIT (FPI_PRINT_VARIANT_TYPE);
+  g_autoptr(GPtrArray) to_free = g_ptr_array_new_with_free_func (free);
   gsize len;
 
   g_assert (data);
@@ -680,8 +681,6 @@ fp_print_serialize (FpPrint *print,
   /* Unused a{sv} for expansion */
   g_variant_builder_open (&builder, G_VARIANT_TYPE_VARDICT);
   g_variant_builder_close (&builder);
-
-  g_autoptr(GPtrArray) to_free = g_ptr_array_new_with_free_func (free);
 
   /* Insert NBIS print data for type NBIS, otherwise the GVariant directly */
   if (print->type == FPI_PRINT_NBIS)
