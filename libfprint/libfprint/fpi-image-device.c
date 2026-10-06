@@ -234,10 +234,11 @@ fp_image_device_maybe_complete_action (FpImageDevice *self, GError *error)
 }
 
 /* Template update: a scan is added only if this many enrolled samples match
- * it, and at most SIGFM_ADAPT_MAX_SAMPLES added samples are kept. Offline,
- * genuine scans from the day before enrollment had 0-6 supporting samples
- * (out of 16) and wrong-finger scans none. */
-#define SIGFM_ADAPT_MIN_SUPPORT  3
+ * it, and at most SIGFM_ADAPT_MAX_SAMPLES added samples are kept. Genuine
+ * scans from another day that matched at all had only 1-3 supporting samples
+ * (out of 16), so requiring more keeps only same-day scans and the template
+ * never follows the finger. Wrong-finger scans had none (30/30). */
+#define SIGFM_ADAPT_MIN_SUPPORT  1
 #define SIGFM_ADAPT_MAX_SAMPLES  8
 
 /* After a SIGFM match, add the scan to @template and write it back.
