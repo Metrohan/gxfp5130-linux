@@ -23,7 +23,7 @@ int main(void)
 	assert(gxfp_fdt_flow_wait_up_retry_due(&flow, 5000) == 0);
 
 	flow.state = GXFP_FDT_STATE_DOWN;
-	flow.wait_up_retries = 3;
+	flow.wait_up_retries = 20; /* FDT_WAIT_UP_MAX_RETRIES, src/flow/fdt.c */
 	assert(gxfp_fdt_flow_wait_up_retry_due(&flow, 1750) == -ETIMEDOUT);
 
 	return 0;

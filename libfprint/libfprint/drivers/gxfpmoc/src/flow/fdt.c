@@ -22,7 +22,15 @@
 #define FDT_UP_DEFAULT_OFFSET 0x15u
 #define FDT_UP_NOTOUCH_FALLBACK 0x1300u
 #define FDT_WAIT_UP_RETRY_MS 750
-#define FDT_WAIT_UP_MAX_RETRIES 3
+/*
+ * Re-arm budget for GXFP_FDT_MODE_WAIT_UP. That state waits for a human to
+ * lift their finger: the measured down->up report latency on GF_GCC_EC_20069
+ * is 1.4-1.8 s even when the operator lifts immediately, so the previous
+ * budget of 3 (~2.25 s) aborted a 17-stage fprintd-enroll on the first
+ * hesitation - and fprintd deletes the stored template when an enrollment
+ * starts, leaving the user with no fingerprint at all. 20 re-arms = ~15 s.
+ */
+#define FDT_WAIT_UP_MAX_RETRIES 20
 
 static void fdt_downbase_from_raw(const uint8_t *raw_base,
 				  size_t raw_len,
@@ -289,6 +297,19 @@ int gxfp_fdt_flow_feed_record(struct gxfp_fdt_flow *flow,
 		if (r < 0)
 			return r;
 	}
+
+	/*
+	 * 0x0080/0x0082 carry the same "finger up, here is the down baseline"
+	 * report as FDT_STATUS_UP: fdt_base_table_update_from_frame() already
+	 * treats all three as UP_GET_DOWN_BASE. A firmware that answers an
+	 * armed FDT_UP with this encoding while no finger is present (observed
+	 * on GF_GCC_EC_20069) would otherwise never complete WAIT_UP - the
+	 * record is consumed as REVERSE, which only WAIT_DOWN acts on - so the
+	 * caller re-arms FDT_WAIT_UP_MAX_RETRIES times and fails with
+	 * -ETIMEDOUT ("fdt wait-up retry failed").
+	 */
+	if ((events & GXFP_FDT_EVENT_REVERSE) && flow->mode == GXFP_FDT_MODE_WAIT_UP)
+		events |= GXFP_FDT_EVENT_UP;
 
 	if (events & GXFP_FDT_EVENT_DOWN)
 		flow->state = GXFP_FDT_STATE_DOWN;
