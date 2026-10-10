@@ -55,6 +55,7 @@ Bu paket sorunu uçtan uca çözüyor:
 |---|---|---|---|
 | Huawei MateBook D16 2024 (MCLF-XX / M1010) | `GXFP5130:00` | `GF_GCC_EC_20067` | ✅ Doğrulandı |
 | Huawei MateBook MCLG-XX / M1010 | `GXFP5130:00` | `GF_GCC_EC_20055` | ✅ Doğrulandı (topluluk raporu) |
+| Huawei MateBook D (MDG-XX / M1010) | `GXFP5130:00` | `GF_GCC_EC_20055` | ✅ Doğrulandı (topluluk raporu) |
 | Huawei MateBook 14 2022 (KLVF-XX / M1010) | `GXFP5130:00` | `GF_GCC_EC_20040` | ⚠️ Kısmi (topluluk raporu) — aşağıdaki nota bakın |
 | GXFP5130:00 bulunan diğer MateBook modelleri | `GXFP5130:00` | bilinmiyor | ❓ Test edilmedi — lütfen bildirin |
 
@@ -248,10 +249,23 @@ açın — iki dakika sürer ve aynı donanıma sahip herkese yardımcı olur.
 
 - [**nawka12**](https://github.com/nawka12): güncel Arch derleme düzeltmeleri (harici/DKMS
   modül derlemesi, Mbed TLS 3, RX kuyruğu ayırma) ve SIGFM eşleştirme düzeltmeleri
-  ([#3](https://github.com/Metrohan/gxfp5130-linux/pull/3))
+  ([#3](https://github.com/Metrohan/gxfp5130-linux/pull/3)), günler arası SIGFM eşleşmesi
+  (oran 0.85 + CLAHE, [#11](https://github.com/Metrohan/gxfp5130-linux/pull/11)) ve
+  testleri ([#13](https://github.com/Metrohan/gxfp5130-linux/pull/13)), ayrıca print
+  serileştirme sızıntısı düzeltmesi ([#12](https://github.com/Metrohan/gxfp5130-linux/pull/12))
 - [**TarekELz**](https://github.com/TarekELz): Fedora/SELinux raporu ve testi
   ([#8](https://github.com/Metrohan/gxfp5130-linux/issues/8)), `gxfp_local.te` politika
   modülü ([#9](https://github.com/Metrohan/gxfp5130-linux/pull/9))
+- [**fstronin**](https://github.com/fstronin): `GF_GCC_EC_20069` donanım yazılımı için
+  WAIT_UP düzeltmesi ve genişletilmiş yeniden-kurma bütçesi
+  ([#14](https://github.com/Metrohan/gxfp5130-linux/pull/14))
+- [**shern2**](https://github.com/shern2): MateBook MCLG-XX uyumluluk raporu ve Arch
+  bağımlılık raporu ([#4](https://github.com/Metrohan/gxfp5130-linux/issues/4),
+  [#5](https://github.com/Metrohan/gxfp5130-linux/issues/5))
+- [**JonasKenke**](https://github.com/JonasKenke): MateBook 14 2022 uyumluluk raporu
+  ([#7](https://github.com/Metrohan/gxfp5130-linux/issues/7))
+- [**choirib**](https://github.com/choirib): MateBook D MDG-XX uyumluluk raporu
+  ([#15](https://github.com/Metrohan/gxfp5130-linux/issues/15))
 
 ## Lisans
 
