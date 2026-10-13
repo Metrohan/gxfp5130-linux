@@ -12,6 +12,11 @@ entegrasyonu ve PAM kurulumu bir arada.
 > Farklı bir modelde çalıştırdıysanız lütfen
 > [uyumluluk raporu açın](https://github.com/Metrohan/gxfp5130-linux/issues/new?template=compatibility_report.yml).
 
+
+![Terminal kaydı: fprintd-enroll (16 aşama) ve verify-match dönen fprintd-verify](docs/demo.gif)
+
+<sub>Bakımcının Huawei MateBook D16 2024 cihazında kaydedildi: `fprintd-enroll` (16 aşama) ve `fprintd-verify`. Kayıttaki son `sudo` adımı yarıda kesildi.</sub>
+
 > **Emek:** Orijinal çekirdek sürücüsü, `gxfpmoc` kullanıcı alanı kütüphanesi ve
 > libfprint SIGFM çatalı [**Void755**](https://github.com/Void755) tarafından
 > oluşturulmuştur. Bu repo o çalışmayı dağıtım için paketler (Arch paketi, PAM
@@ -220,13 +225,15 @@ kullanıcı alanı basit bir okuma/yazma karakter aygıtı görür.
 |---|---|---|
 | `/sys/bus/acpi/devices` altında `GXFP5130:00` yok | BIOS'ta parmak izi okuyucu kapalı | BIOS/UEFI'den etkinleştirin |
 | `modprobe gxfp` sonrası `/dev/gxfp` yok | Çekirdek/modül sürüm uyumsuzluğu | `modinfo gxfp` vermagic ile `uname -r` karşılaştırın |
+| `fprintd-enroll` `No devices available` yazıyor | Modül yüklü değil (`/dev/gxfp` yok) ya da GXFP sürücüsü olmayan stok `libfprint` kullanılıyor | `lsmod \| grep gxfp` ve `journalctl -k -b -g gxfp` kontrol edin; bu repodan derlenen yamalı `libfprint-gxfp` paketini kurun |
 | fprintd'den `Operation not permitted` | `DeviceAllow` drop-in eksik | `sudo ./scripts/install.sh` çalıştırın, fprintd'yi yeniden başlatın |
-| TLS MAC doğrulama hatası | Ana PSK sensör PSK'sıyla eşleşmiyor | fprintd olmadan doğrulayın: `sudo systemctl stop fprintd && sudo gxfp_capture --psk-raw32 /var/lib/fprintd/gxfp/psk_raw32.bin`. Hâlâ başarısızsa anahtarı Windows'tan çıkarın ya da `/var/lib/fprintd/gxfp` dizinini yedekleyip `sudo ./scripts/provision-psk.sh --replace` çalıştırın (sensördeki anahtarın üzerine yazar; Windows'un anahtarı geçersiz olur) |
+| `SSL - Verification of the message MAC failed` (TLS MAC doğrulama hatası) | Ana PSK sensör PSK'sıyla eşleşmiyor | fprintd olmadan doğrulayın: `sudo systemctl stop fprintd && sudo gxfp_capture --psk-raw32 /var/lib/fprintd/gxfp/psk_raw32.bin`. Hâlâ başarısızsa anahtarı Windows'tan çıkarın ya da `/var/lib/fprintd/gxfp` dizinini yedekleyip `sudo ./scripts/provision-psk.sh --replace` çalıştırın (sensördeki anahtarın üzerine yazar; Windows'un anahtarı geçersiz olur) |
 | Yakalama çalışıyor, kayıt başarısız | libfprint/SIGFM katman sorunu | `FP_GXFP_LOG=1` çıktısı toplayın ve bir sorun bildirin |
 | Parmak kaldırma zaman zaman algılanmıyor | `GF_GCC_EC_20067` donanım yazılımı özgünlüğü | Sürücü otomatik yeniden deniyor; işlem gerekmez |
 | İlk kayıt denemesi parmak istemeden ~13sn içinde başarısız oluyor: `fdt wait-up retry failed: Connection timed out` | `GF_GCC_EC_20055` donanım yazılımında bir kez gözlendi; kök neden doğrulanmadı | Yeniden başlatıp tekrar deneyin. Tekrarlarsa `FP_GXFP_LOG=1`'e ek olarak çekirdek tarafı izini de toplayın: `echo 1 \| sudo tee /sys/kernel/debug/gxfp/trace_enable`, tekrar üretin, sonra `sudo cat /sys/kernel/debug/gxfp/trace_dump`; ikisini de bir sorun bildirimine ekleyin |
 | Tam-pad merkez basışlarda eşleşiyor ama kenar/uç basışlarda eşleşmiyor | Küçük sensör alanı, konuma duyarlı (FW `GF_GCC_EC_20040`'ta gözlendi) | Tam-pad merkez basışlarla yeniden kayıt yapın; kısmi/kenar basışlardan kaçının |
 | Fedora'da `fprintd` için `read PSK ... Permission denied` veya `avc: denied` | SELinux enforcing; PSK yolu ve `/dev/gxfp` `fprintd_t` için etiketsiz | Bkz. [Fedora / SELinux](#fedora--selinux-enforcing) |
+| Omarchy'de `omarchy-setup-security-fingerprint` "No fingerprint sensor detected" ile çıkıyor veya `libfprint-gxfp`'in yerini alıyor | Betik yalnız USB okuyucuları algılıyor (sysfs ile); bu sensör eSPI. MateBook D MDG-XX'te (FW `GF_GCC_EC_20055`) [choirib](https://github.com/choirib) bildirdi; bakımcı tarafından test edilmedi | Bu betiği çalıştırmayın. Kilit ekranı için `/etc/pam.d/omarchy-lock-fingerprint` dosyasını elle oluşturun |
 | Çekirdek yükseltmesinden sonra modül yok | DKMS yeniden derleme gerekiyor | `sudo dkms autoinstall -k "$(uname -r)"` |
 
 ## Kaldırma

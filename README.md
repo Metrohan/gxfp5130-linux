@@ -18,6 +18,11 @@ and PAM setup, all in one place.
 > Works on Huawei MateBook D16 2024 (MCLF-XX). If it works on your machine,
 > please [open a compatibility report](https://github.com/Metrohan/gxfp5130-linux/issues/new?template=compatibility_report.yml).
 
+
+![Terminal recording: fprintd-enroll (16 stages) and fprintd-verify returning verify-match](docs/demo.gif)
+
+<sub>Recorded on the maintainer's Huawei MateBook D16 2024: `fprintd-enroll` (16 stages) and `fprintd-verify`. The trailing `sudo` step in the recording was cut off.</sub>
+
 > **Credits:** The original kernel driver, `gxfpmoc` userspace library, and
 > the libfprint SIGFM fork were created by [**Void755**](https://github.com/Void755).
 > This repository packages that work for distribution (Arch package, PAM
@@ -217,13 +222,15 @@ transport; userspace sees a simple read/write character device.
 | ---------------------------------------------- | --------------------------------------- | ------------------------------------------------------------- |
 | No`GXFP5130:00` in `/sys/bus/acpi/devices` | Fingerprint reader disabled in firmware | Enable in BIOS/UEFI                                           |
 | No`/dev/gxfp` after `modprobe gxfp`        | Kernel/module version mismatch          | Check`modinfo gxfp` vermagic vs `uname -r`                |
+| `fprintd-enroll` prints `No devices available` | Module not loaded (no `/dev/gxfp`), or stock `libfprint` without the GXFP driver is in use | Check `lsmod \| grep gxfp` and `journalctl -k -b -g gxfp`; install the patched `libfprint-gxfp` package built from this repo |
 | `Operation not permitted` from fprintd       | Missing`DeviceAllow` drop-in          | Re-run`sudo ./scripts/install.sh`, restart fprintd          |
-| TLS MAC verification failure                   | Host PSK ≠ sensor PSK                  | Confirm without fprintd: `sudo systemctl stop fprintd && sudo gxfp_capture --psk-raw32 /var/lib/fprintd/gxfp/psk_raw32.bin`. If it still fails, extract the key from Windows, or back up `/var/lib/fprintd/gxfp` and run `sudo ./scripts/provision-psk.sh --replace` (overwrites the sensor key; Windows' key stops working) |
+| `SSL - Verification of the message MAC failed` (TLS MAC verification failure)                   | Host PSK ≠ sensor PSK                  | Confirm without fprintd: `sudo systemctl stop fprintd && sudo gxfp_capture --psk-raw32 /var/lib/fprintd/gxfp/psk_raw32.bin`. If it still fails, extract the key from Windows, or back up `/var/lib/fprintd/gxfp` and run `sudo ./scripts/provision-psk.sh --replace` (overwrites the sensor key; Windows' key stops working) |
 | Capture works, enrollment fails                | libfprint/SIGFM layer issue             | Collect`FP_GXFP_LOG=1` output and open an issue             |
 | Finger-up occasionally missed                  | Known firmware`GF_GCC_EC_20067` quirk | Driver retries automatically; no action needed                |
 | First enroll attempt fails ~13s in, before any finger prompt: `fdt wait-up retry failed: Connection timed out` | Observed once on FW `GF_GCC_EC_20055`; root cause not confirmed | Reboot and retry. If it recurs, in addition to `FP_GXFP_LOG=1`, capture the kernel-side trace: `echo 1 \| sudo tee /sys/kernel/debug/gxfp/trace_enable`, reproduce, then `sudo cat /sys/kernel/debug/gxfp/trace_dump`, and attach both to an issue |
 | Verify matches on centered full-pad presses but not on edge/tip captures | Small sensor area, placement-sensitive (observed on FW `GF_GCC_EC_20040`) | Re-enroll using full-pad centered presses; avoid partial/edge captures |
 | `read PSK ... Permission denied` or `avc: denied` for `fprintd` on Fedora | SELinux enforcing; PSK path and `/dev/gxfp` unlabeled for `fprintd_t` | See [Fedora / SELinux](#fedora--selinux-enforcing) |
+| On Omarchy, `omarchy-setup-security-fingerprint` exits with "No fingerprint sensor detected" or replaces `libfprint-gxfp` | The script detects USB readers only (via sysfs), and this is an eSPI sensor. Reported by [choirib](https://github.com/choirib) on a MateBook D MDG-XX (FW `GF_GCC_EC_20055`); not tested by the maintainer | Do not run that script. For the lock screen, create `/etc/pam.d/omarchy-lock-fingerprint` manually |
 | Module missing after kernel upgrade            | DKMS rebuild needed                     | `sudo dkms autoinstall -k "$(uname -r)"`                    |
 
 ## Removal

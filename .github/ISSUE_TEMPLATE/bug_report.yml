@@ -7,6 +7,12 @@ body:
       value: |
         Thanks for taking the time to file a bug report. Please fill out every section.
 
+  - type: markdown
+    attributes:
+      value: |
+        **Do not attach or paste key material:** `psk_raw32.bin`, `BB010002`/`BB010003` provisioning blobs,
+        or the contents of `/var/lib/fprintd/gxfp/`. Share file sizes or hashes only.
+
   - type: input
     id: laptop
     attributes:
@@ -14,6 +20,15 @@ body:
       placeholder: "e.g. Huawei MateBook D16 2024 MCLF-XX"
     validations:
       required: true
+
+  - type: input
+    id: firmware
+    attributes:
+      label: Firmware string (optional)
+      description: "`journalctl -k -b -g 'INIT: FW'`"
+      placeholder: "e.g. GF_GCC_EC_20067"
+    validations:
+      required: false
 
   - type: input
     id: kernel

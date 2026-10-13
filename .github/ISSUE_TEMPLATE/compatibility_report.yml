@@ -8,6 +8,12 @@ body:
         Use this template to report a new compatible device or confirm an untested one.
         Even a "works perfectly" report is valuable — it gets added to the supported hardware table.
 
+  - type: markdown
+    attributes:
+      value: |
+        **Do not attach or paste key material:** `psk_raw32.bin`, `BB010002`/`BB010003` provisioning blobs,
+        or the contents of `/var/lib/fprintd/gxfp/`. Share file sizes or hashes only.
+
   - type: input
     id: laptop
     attributes:
@@ -60,6 +66,15 @@ body:
         - "No — does not work"
     validations:
       required: true
+
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `./scripts/doctor.sh` (optional)
+      description: Helps us see missing build dependencies and the environment quickly.
+      render: text
+    validations:
+      required: false
 
   - type: textarea
     id: notes

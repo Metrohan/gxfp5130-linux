@@ -17,3 +17,6 @@ finger.pgm
 build/
 libfprint/build/
 scripts/patches/00*.patch
+# raw terminal recordings embed machine-id/boot-id and local user/host names
+docs/*.cast
+docs/*.cast.*
