@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GXFP5130 — Nasıl Çalışır?</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    line-height: 1.7;
+    padding: 2rem;
+  }
+
+  h1 { font-size: 2rem; color: #7dd3fc; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.3rem; color: #38bdf8; margin: 2.5rem 0 1rem; border-left: 3px solid #38bdf8; padding-left: 0.75rem; }
+  h3 { font-size: 1rem; color: #7dd3fc; margin: 1.5rem 0 0.5rem; }
+
+  .subtitle { color: #64748b; font-size: 0.95rem; margin-bottom: 3rem; }
+
+  .card {
+    background: #1e2330;
+    border: 1px solid #2d3748;
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin: 1rem 0;
+  }
+
+  .card.warn {
+    border-color: #f59e0b;
+    background: #1a1500;
+  }
+
+  .card.ok {
+    border-color: #22c55e;
+    background: #001a0a;
+  }
+
+  pre, code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.85rem;
+  }
+
+  pre {
+    background: #131720;
+    border: 1px solid #2d3748;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    margin: 0.75rem 0;
+    line-height: 1.6;
+  }
+
+  code {
+    background: #1e2330;
+    color: #f472b6;
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+  }
+
+  .diagram {
+    background: #131720;
+    border: 1px solid #2d3748;
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin: 1rem 0;
+    font-family: monospace;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: #94a3b8;
+  }
+
+  .diagram .hi  { color: #7dd3fc; }
+  .diagram .ok  { color: #22c55e; }
+  .diagram .warn{ color: #f59e0b; }
+  .diagram .dim { color: #475569; }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.15em 0.6em;
+    border-radius: 99px;
+    margin-left: 0.4rem;
+    vertical-align: middle;
+  }
+  .tag.kernel  { background: #1e3a5f; color: #7dd3fc; }
+  .tag.hw      { background: #3b1f00; color: #fb923c; }
+  .tag.user    { background: #14301a; color: #4ade80; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0;
+    font-size: 0.9rem;
+  }
+  th {
+    background: #1e2330;
+    color: #38bdf8;
+    padding: 0.6rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #2d3748;
+  }
+  td {
+    padding: 0.55rem 1rem;
+    border-bottom: 1px solid #1e2330;
+  }
+  tr:last-child td { border-bottom: none; }
+
+  .note {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin-top: 0.4rem;
+  }
+
+  .step {
+    display: flex;
+    gap: 1rem;
+    margin: 0.75rem 0;
+    align-items: flex-start;
+  }
+  .step-num {
+    min-width: 2rem;
+    height: 2rem;
+    background: #1e3a5f;
+    color: #7dd3fc;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+  .step-body { flex: 1; padding-top: 0.2rem; }
+
+  hr {
+    border: none;
+    border-top: 1px solid #2d3748;
+    margin: 2.5rem 0;
+  }
+
+  .toc {
+    background: #1e2330;
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+  .toc a { color: #38bdf8; text-decoration: none; display: block; padding: 0.2rem 0; font-size: 0.9rem; }
+  .toc a:hover { color: #7dd3fc; }
+
+  .highlight { color: #f59e0b; font-weight: 600; }
+
+  @media (max-width: 700px) {
+    body { padding: 1rem; }
+    h1 { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<h1>GXFP5130 — Nasıl Çalışır?</h1>
+<p class="subtitle">Huawei MateBook'taki parmak izi sensörünün Linux üzerinde nasıl çalıştığını anlatan teknik rehber.</p>
+
+<div class="toc">
+  <strong style="color:#7dd3fc; display:block; margin-bottom:0.5rem;">İçindekiler</strong>
+  <a href="#problem">1. Problem: Sensör neden görünmüyor?</a>
+  <a href="#donanim">2. Donanım topolojisi</a>
+  <a href="#ec">3. Embedded Controller (EC) nedir?</a>
+  <a href="#espi">4. eSPI ve Mailbox nedir?</a>
+  <a href="#gpio">5. GPIO handshake</a>
+  <a href="#kernel">6. Kernel modülü ne yapar?</a>
+  <a href="#yazilim">7. Yazılım stack'i (libfprint → fprintd → PAM)</a>
+  <a href="#akis">8. Tam veri akışı</a>
+  <a href="#tls">9. TLS-PSK neden var?</a>
+  <a href="#ozet">10. Özet</a>
+</div>
+
+<!-- ───────────────────────────────────── -->
+<h2 id="problem">1. Problem: Sensör neden görünmüyor?</h2>
+
+<p>Standart Linux, parmak izi sensörlerini <strong>USB HID</strong> veya <strong>I2C/SPI bus</strong> üzerinden tanır. <code>fprintd-enroll</code> çalıştırınca önce bu yollara bakar.</p>
+
+<div class="card warn">
+  <strong>⚠ GXFP5130 bu yolların hiçbirinde değil.</strong><br>
+  USB'de yok. PCIe'de yok. Linux'un gördüğü herhangi bir SPI bus'ında yok.<br>
+  Bu yüzden kutudan çıktığı haliyle: <code>No devices available</code>
+</div>
+
+<p>Peki sensör nerede? <span class="highlight">Embedded Controller'ın iç SPI bus'ında.</span></p>
+
+<!-- ───────────────────────────────────── -->
+<h2 id="donanim">2. Donanım Topolojisi</h2>
+
+<div class="diagram">
+<span class="hi">┌─────────────────────────────────┐</span>
+<span class="hi">│         Intel CPU (Ana İşlemci) │</span>
+<span class="hi">└───────────────┬─────────────────┘</span>
+                │
+         <span class="ok">eSPI bus</span> (Enhanced SPI, anakart iç yolu)
+                │
+<span class="warn">┌───────────────▼─────────────────┐</span>
+<span class="warn">│   Embedded Controller (EC)      │</span>
+<span class="warn">│   Küçük mikrodenetleyici        │</span>
+<span class="warn">│   (Klavye, fan, güç yönetimi,   │</span>
+<span class="warn">│    ve parmak izi sensörü buraya)│</span>
+<span class="warn">└───────────────┬─────────────────┘</span>
+                │
+         <span class="dim">EC'nin iç SPI bus'ı</span> (Linux görmez)
+                │
+<span class="hi">┌───────────────▼─────────────────┐</span>
+<span class="hi">│      GXFP5130 Çipi              │</span>
+<span class="hi">│  (Parmak izi sensörü + işlemci) │</span>
+<span class="hi">└─────────────────────────────────┘</span>
+</div>
+
+<p>CPU, sensörle <strong>doğrudan konuşamıyor</strong>. Her mesaj EC üzerinden geçmek zorunda. EC bir çevirmen gibi çalışıyor.</p>
+
+<!-- ───────────────────────────────────── -->
+<h2 id="ec">3. Embedded Controller (EC) Nedir?</h2>
+
+<p>EC, laptopun anakartındaki küçük, bağımsız bir mikrodenetleyici. Görevleri:</p>
+
+<table>
+  <tr><th>Görev</th><th>Nasıl?</th></tr>
+  <tr><td>Klavye tuşlarını okumak</td><td>Tuş matrisini tarar, OS'a bildirir</td></tr>
+  <tr><td>Fan kontrolü</td><td>Sıcaklığa göre fan hızını ayarlar</td></tr>
+  <tr><td>Güç yönetimi</td><td>Batarya şarjı, uyku/uyanma</td></tr>
+  <tr><td>Parmak izi sensörü</td><td>GXFP5130'a komut iletir, yanıt alır</td></tr>
+</table>
+
+<div class="card">
+  EC, ana işlemci kapansa bile çalışmaya devam eder. Bilgisayar "kapalı" görünürken bile EC klavyeyi dinleyebilir (güç tuşu gibi).
+</div>
+
+<!-- ───────────────────────────────────── -->
+<h2 id="espi">4. eSPI ve Mailbox Nedir?</h2>
+
+<h3>eSPI (Enhanced SPI)</h3>
+<p>Intel'in tasarladığı, CPU ile EC arasındaki veri yolu. Standart SPI'dan daha hızlı ve daha fazla özelliği var. Ama bu bizim için önemli değil — biz eSPI'ı doğrudan kullanmıyoruz.</p>
+
+<h3>Mailbox (Posta Kutusu)</h3>
+<p>CPU ve EC'nin paylaştığı bir <strong>bellek bölgesi</strong>. Adresi ACPI'den okunur (kodda sabit değil, makineye göre değişir).</p>
+
+<div class="diagram">
+<span class="dim">Firmware'in ayırdığı özel bir bellek penceresi:</span>
+
+<span class="hi">  &lt;ACPI adresi&gt; ┌──────────────────────┐</span>
+<span class="hi">              │   eSPI Mailbox       │  ← CPU buraya yazar</span>
+<span class="hi">              │   (bellek bölgesi)   │  ← EC buradan okur</span>
+<span class="hi">              │                      │  ← EC buraya yazar</span>
+<span class="hi">              │                      │  ← CPU buradan okur</span>
+<span class="hi">              └──────────────────────┘</span>
+
+<span class="dim">Boyut: birkaç KB — sadece komut/yanıt için yeterli</span>
+</div>
+
+<p>İşleyiş:</p>
+<div class="step"><div class="step-num">1</div><div class="step-body">CPU, mailbox'a bir komut yazar. ("Parmak izini oku")</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-body">CPU, bir GPIO pini tetikler. ("Mesaj var" sinyali)</div></div>
+<div class="step"><div class="step-num">3</div><div class="step-body">EC bunu görür, mailbox'ı okur, GXFP5130'a iletir.</div></div>
+<div class="step"><div class="step-num">4</div><div class="step-body">GXFP5130 yanıt verir, EC bunu mailbox'a yazar.</div></div>
+<div class="step"><div class="step-num">5</div><div class="step-body">EC, IRQ hattını yükseltir. ("Yanıt hazır")</div></div>
+<div class="step"><div class="step-num">6</div><div class="step-body">CPU interrupt'ı alır, mailbox'tan yanıtı okur; her parçadan sonra "okudum" darbesi (read-done GPIO'su) verir.</div></div>
+
+<div class="card ok">
+  <strong>Önemli:</strong> Bu "mailbox" aslında sadece paylaşılan RAM'in bir parçası. CPU ve EC aynı bellek adresine bakıyorlar. GPIO sinyalleri ise "bak, bir şey yazdım" demek için kullanılıyor.
+</div>
+
+<!-- ───────────────────────────────────── -->
+<h2 id="gpio">5. GPIO Handshake</h2>
+
+<p>GPIO (General Purpose Input/Output) — laptoptaki elektrik pinleri. Yüksek (1) veya alçak (0) voltaj taşırlar. Üç hat kullanıyoruz:</p>
+
+<table>
+  <tr><th>Hat</th><th>Yön</th><th>Görev</th></tr>
+  <tr><td><code>write-done</code> (<code>GpioIo</code> #1)</td><td>CPU → EC</td><td>"Mailbox'a bir komut yazdım, al" (yaklaşık 4 ms'lik darbe)</td></tr>
+  <tr><td><code>read-done</code> (<code>GpioIo</code> #2)</td><td>CPU → EC</td><td>"Yanıtın bu parçasını okudum" (kısa darbe)</td></tr>
+  <tr><td><code>irq</code> (<code>GpioInt</code>)</td><td>EC → CPU</td><td>"Yanıt hazır" — interrupt</td></tr>
+</table>
+
+<p class="note">Hangi <code>GpioIo</code>'nun write-done, hangisinin read-done olduğu ACPI'de isimle yazmıyor; sürücü <code>_CRS</code> içindeki sıraya bakıyor (birinci write-done, ikinci read-done). GPIO numaraları ve adresler makineye göre değişir, kodda sabit değil, ACPI tablosundan okunuyor.</p>
+
+<h3>Interrupt (IRQ) nedir?</h3>
+<p>CPU sürekli "bir şey geldi mi?" diye sorgulamak yerine (polling), EC "geldi!" diye haber verir. Bu habere <strong>interrupt</strong> denir. CPU o anda ne yapıyorsa bırakır, interrupt handler'ı çalıştırır, sonra kaldığı yerden devam eder.</p>
+
+<!-- ───────────────────────────────────── -->
+<h2 id="kernel">6. Kernel Modülü Ne Yapar?</h2>
+
+<p>Kernel modülünün tek görevi bu transport katmanını yönetmek. Üç ana iş yapar:</p>
+
+<h3>6a. ACPI'dan donanım bilgilerini okumak</h3>
+<p>BIOS açılışta bir tablo yayınlar: "bu laptopda şu aygıtlar var, şu adreslerde, şu pinlerde." Buna <strong>ACPI tablosu</strong> denir. Kernel modülü bu tablodan mailbox adresini ve GPIO numaralarını öğrenir.</p>
+
+<pre><code>/* ACPI tablo formatı (örnek, basitleştirilmiş; değerler makineye göre değişir):
+   Device GXFP5130:00
+     Memory32Fixed: &lt;adres&gt; + &lt;uzunluk&gt;   ← mailbox penceresi
+     GpioInt: IRQ hattı                   ← 1. GPIO kaynağı
+     GpioIo : write-done                  ← sürücü sıraya göre eşler
+     GpioIo : read-done
+*/
+
+// Kernel modülü bunu şöyle okur:
+res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+gdev->hw.mailbox_mmio = devm_ioremap_resource(&pdev->dev, res);</code></pre>
+
+<p><code>devm_ioremap_resource</code> — ACPI'nin verdiği fiziksel bellek adresini kernel'in erişebileceği sanal adrese çevirir. Bu sadece kernel'de yapılabilir, userspace'den yapılamaz.</p>
+
+<h3>6b. GPIO interrupt'ı kaydetmek</h3>
+<pre><code>// IRQ hattı yükselince thread handler'ı çağır (donanım handler'ı yok):
+devm_request_threaded_irq(&amp;pdev-&gt;dev, gdev-&gt;hw.irq, NULL, gxfp_irq_thread,
+                          IRQF_ONESHOT | IRQF_NO_AUTOEN, "gxfp-irq", gdev);</code></pre>
+
+<p>EC yanıtı mailbox'a yazınca IRQ hattı (seviye-yüksek) yükseliyor. <code>gxfp_irq_thread</code> çalışıyor, mailbox'tan veri okunuyor, her parçadan sonra read-done darbesi veriliyor. Kesme, modül başlangıç dizisini bitirene kadar kapalı tutulur.</p>
+
+<h3>6c. /dev/gxfp oluşturmak</h3>
+<p>Tüm bu karmaşıklığı gizleyip userspace'e basit bir dosya arayüzü sunuyor:</p>
+
+<pre><code>// Userspace şunu yapabilir:
+int fd = open("/dev/gxfp", O_RDWR);
+write(fd, komut, komut_boyutu);   // sensöre komut gönder
+read(fd, yanit, yanit_boyutu);    // yanıtı al</code></pre>
+
+<div class="card">
+  <strong>Özetle:</strong> Kernel modülü bir <em>tercüman</em>. Bir tarafta <code>/dev/gxfp</code> (basit dosya), diğer tarafta mailbox + GPIO (karmaşık donanım). Aradaki çeviriyi yapar.
+</div>
+
+<!-- ───────────────────────────────────── -->
+<h2 id="yazilim">7. Yazılım Stack'i</h2>
+
+<div class="diagram">
+<span class="ok">┌─────────────────────────────────┐  ← USERSPACE</span>
+<span class="ok">│  sudo / login ekranı / tarayıcı │</span>
+<span class="ok">└────────────────┬────────────────┘</span>
+                 │ "Kimliği doğrula"
+<span class="ok">┌────────────────▼────────────────┐</span>
+<span class="ok">│  PAM (pam_fprintd.so)           │  Kimlik doğrulama çerçevesi</span>
+<span class="ok">└────────────────┬────────────────┘</span>
+                 │ D-Bus mesajı
+<span class="ok">┌────────────────▼────────────────┐</span>
+<span class="ok">│  fprintd (sistem servisi)       │  Parmak izi kayıt/doğrulama</span>
+<span class="ok">└────────────────┬────────────────┘</span>
+                 │ kütüphane çağrısı
+<span class="ok">┌────────────────▼────────────────┐</span>
+<span class="ok">│  libfprint (GXFP5130 plugin)    │  Sensör protokolünü konuşur</span>
+<span class="ok">└────────────────┬────────────────┘</span>
+                 │ read()/write()
+<span class="hi">┌────────────────▼────────────────┐  ← KERNEL</span>
+<span class="hi">│  gxfp kernel modülü             │  Transport yönetimi</span>
+<span class="hi">└────────────────┬────────────────┘</span>
+                 │ ioremap + GPIO
+<span class="warn">┌────────────────▼────────────────┐  ← DONANIM</span>
+<span class="warn">│  eSPI Mailbox + EC + GXFP5130   │</span>
+<span class="warn">└─────────────────────────────────┘</span>
+</div>
+
+<h3>PAM</h3>
+<p>Pluggable Authentication Modules. Linux'un kimlik doğrulama sistemi. <code>sudo</code> yazınca, giriş ekranında şifre girerken hep PAM devreye girer. <code>/etc/pam.d/system-auth</code> dosyası hangi yöntemlerin deneneceğini söyler.</p>
+
+<pre><code># /etc/pam.d/system-auth
+auth  sufficient  pam_fprintd.so timeout=10   ← "10 sn parmak izi dene, yeterliyse geç"
+auth  [success=1] pam_unix.so                 ← yoksa şifreye geç</code></pre>
+
+<p><code>timeout=10</code>: <code>pam_fprintd</code> parmak izi için en fazla 10 saniye bekler, sonra şifre adımına geçilir.</p>
+
+<h3>D-Bus</h3>
+<p>Linux'ta süreçler arası iletişim sistemi. PAM, fprintd'ye "parmak izi doğrula" demek için D-Bus kullanır. Tıpkı bir API çağrısı gibi ama işletim sistemi genelinde.</p>
+
+<h3>libfprint</h3>
+<p>Parmak izi cihazlarını soyutlayan açık kaynak kütüphane. Her cihaz tipi için bir plugin var. GXFP5130 plugin'i <code>/dev/gxfp</code>'yi açar ve sensörün kendi protokolünü (MP protokolü) konuşur.</p>
+
+<!-- ───────────────────────────────────── -->
+<h2 id="akis">8. Tam Veri Akışı — "Parmak izini doğrula"</h2>
+
+<div class="step"><div class="step-num">1</div><div class="step-body"><strong>sudo</strong> çalıştırılır → PAM devreye girer</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-body">PAM → <strong>pam_fprintd.so</strong> çağırır → D-Bus üzerinden fprintd'ye sorar</div></div>
+<div class="step"><div class="step-num">3</div><div class="step-body"><strong>fprintd</strong> → libfprint'e "doğrulama başlat" der</div></div>
+<div class="step"><div class="step-num">4</div><div class="step-body"><strong>libfprint (GXFP plugin)</strong> → <code>/dev/gxfp</code>'ye "parmak izi al" komutu yazar</div></div>
+<div class="step"><div class="step-num">5</div><div class="step-body"><strong>Kernel modülü</strong> → komutu mailbox'a koyar → write-done GPIO'sunu tetikler</div></div>
+<div class="step"><div class="step-num">6</div><div class="step-body"><strong>EC</strong> → mailbox'ı okur → GXFP5130'a SPI üzerinden iletir</div></div>
+<div class="step"><div class="step-num">7</div><div class="step-body"><strong>GXFP5130</strong> → parmağı tarar → sonucu EC'ye gönderir</div></div>
+<div class="step"><div class="step-num">8</div><div class="step-body"><strong>EC</strong> → yanıtı mailbox'a yazar → IRQ hattını yükseltir</div></div>
+<div class="step"><div class="step-num">9</div><div class="step-body"><strong>Kernel modülü</strong> → interrupt alır → mailbox'tan okur (her parçadan sonra read-done darbesi) → <code>/dev/gxfp</code>'ye verir</div></div>
+<div class="step"><div class="step-num">10</div><div class="step-body"><strong>libfprint</strong> → ham görüntüyü alır → SIGFM algoritmasıyla kayıtlı izle karşılaştırır</div></div>
+<div class="step"><div class="step-num">11</div><div class="step-body"><strong>Eşleşme varsa:</strong> fprintd → PAM → sudo → komut çalışır ✓</div></div>
+
+<!-- ───────────────────────────────────── -->
+<h2 id="tls">9. TLS-PSK Neden Var?</h2>
+
+<p>Sensör, parmak izi görüntüsünü ana işlemciye <strong>TLS 1.2-PSK (Pre-Shared Key)</strong> ile şifreli gönderiyor. Bu el sıkışmada rol ters: ana işlemci TLS sunucusu, sensör istemci. Komutlar ise düz kanaldan gidiyor, yalnızca görüntü verisi TLS içinde.</p>
+
+<p>Amaç (çıkarım, kodda yazmıyor): görüntü verisinin açıkta taşınmaması.</p>
+
+<div class="card">
+  <strong>Anahtar nereden geliyor?</strong><br><br>
+  <code>userspace/PSK.md</code>'ye göre Windows sürücüsü bir anahtar uyuşmazlığı görünce yeni bir anahtar üretip sensöre yükler ve Windows DPAPI ile <code>Goodix_Cache.bin</code>'de saklar. Fabrikadan geldiğine dair bu projede bir kanıt yok.<br><br>
+  Linux'ta bu anahtarı iki yoldan elde edebilirsin:
+  <ul style="margin-top:0.5rem; padding-left:1.5rem;">
+    <li><strong>Yeni üret:</strong> <code>provision-psk.sh</code> yeni bir anahtar oluşturur, sensöre yazar.</li>
+    <li><strong>Windows'tan çek:</strong> Dual boot varsa Windows'un kaydettiği anahtarı çıkartıp kullanırsın.</li>
+  </ul>
+</div>
+
+<p>Anahtar <code>/var/lib/fprintd/gxfp/psk_raw32.bin</code>'de saklanır. 32 baytlık rastgele veri.</p>
+
+<!-- ───────────────────────────────────── -->
+<h2 id="ozet">10. Özet</h2>
+
+<table>
+  <tr><th>Kavram</th><th>Ne işe yarar?</th><th>Katman</th></tr>
+  <tr><td>eSPI Mailbox</td><td>CPU-EC arası paylaşılan bellek bölgesi</td><td><span class="tag hw">Donanım</span></td></tr>
+  <tr><td>GPIO</td><td>"Mesaj var" sinyali (el sıkışması)</td><td><span class="tag hw">Donanım</span></td></tr>
+  <tr><td>ACPI</td><td>BIOS'un "bu donanım var" listesi</td><td><span class="tag hw">Donanım</span></td></tr>
+  <tr><td>ioremap</td><td>Fiziksel adresi kernel'e map etme</td><td><span class="tag kernel">Kernel</span></td></tr>
+  <tr><td>IRQ / interrupt</td><td>Donanımdan "bak, bir şey var" sinyali</td><td><span class="tag kernel">Kernel</span></td></tr>
+  <tr><td>/dev/gxfp</td><td>Sensöre basit dosya arayüzü</td><td><span class="tag kernel">Kernel</span></td></tr>
+  <tr><td>libfprint</td><td>Sensör protokolünü konuşan kütüphane</td><td><span class="tag user">Userspace</span></td></tr>
+  <tr><td>fprintd</td><td>Parmak izi yöneten sistem servisi</td><td><span class="tag user">Userspace</span></td></tr>
+  <tr><td>PAM</td><td>sudo/giriş için kimlik doğrulama çerçevesi</td><td><span class="tag user">Userspace</span></td></tr>
+  <tr><td>TLS-PSK</td><td>Sensörle şifreli iletişim anahtarı</td><td><span class="tag user">Userspace</span></td></tr>
+  <tr><td>D-Bus</td><td>Süreçler arası iletişim (PAM ↔ fprintd)</td><td><span class="tag user">Userspace</span></td></tr>
+</table>
+
+<div class="card ok" style="margin-top:2rem;">
+  <strong>Neden kernel driver gerekli?</strong><br><br>
+  GXFP5130, Linux'un gördüğü hiçbir SPI bus'ında yok. Sadece EC üzerinden erişilebilir.
+  EC'ye ulaşmak için mailbox adresi <code>ioremap</code> ile map edilmeli, GPIO interrupt'ları kayıt edilmeli — bunlar sadece kernel'de yapılabilir.
+  Kernel driver bu işi yapıp üstüne basit bir <code>/dev/gxfp</code> dosyası bırakıyor.
+  Gerisini libfprint hallediyor.
+</div>
+
+<p style="margin-top:3rem; color:#475569; font-size:0.8rem;">
+  Bu belge GXFP5130-Linux projesi için hazırlanmıştır. Donanım: Huawei MateBook D16 2024 (MCLF-XX).
+</p>
+
+</body>
+</html>
