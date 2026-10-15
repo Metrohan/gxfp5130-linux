@@ -121,6 +121,7 @@ int gxfp_platform_probe(struct platform_device *pdev)
 		if (gpio_rc) {
 			if (gpio_rc == -EPROBE_DEFER)
 				dev_dbg(&pdev->dev, "GPIO not ready, deferring probe\n");
+			gxfp_trace_exit();
 			return gpio_rc;
 		}
 	}
@@ -129,6 +130,7 @@ int gxfp_platform_probe(struct platform_device *pdev)
 	ret = gxfp_uapi_register(gdev);
 	if (ret) {
 		dev_err(&pdev->dev, "failed to register misc device (/dev/gxfp) rc=%d\n", ret);
+		gxfp_trace_exit();
 		return ret;
 	}
 
@@ -188,6 +190,7 @@ int gxfp_platform_probe(struct platform_device *pdev)
 
 err_ioctl:
 	gxfp_uapi_unregister(gdev);
+	gxfp_trace_exit();
 	return ret;
 }
 
