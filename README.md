@@ -277,6 +277,14 @@ If the driver works on a MateBook model not listed above, please open a
 - Userspace library/tools: [`Void755/gxfpmoc`](https://github.com/Void755/gxfpmoc), snapshot `4b489a7`
 - libfprint fork: [`Void755/libfprint`](https://github.com/Void755/libfprint), snapshot `1f7941e` + OpenCV 5 fallback
 
+Data provenance: the 224-byte sensor configuration table
+(`gxfp_milanl_cfg_template`, `userspace/src/algo/sensor_cfg.c`) is
+byte-identical to the one in `Void755/gxfpmoc` (commit `2db33f7`), which does not
+document where the bytes came from. The same table appears in other public
+Goodix driver projects, one of which attributes it to the vendor's Windows driver.
+We have not verified the original source or its licensing status, and the MIT
+licence of `gxfpmoc` may not cover data it did not create.
+
 The stack is experimental and is not affiliated with Goodix or Huawei.
 
 ## License

@@ -88,6 +88,15 @@ gxfp_cfg_patch_reg(uint8_t *cfg,
     return -ENOENT;
 }
 
+/*
+ * Provenance of this table: byte-identical to the table in Void755/gxfpmoc
+ * (commit 2db33f7, vendored here as 4b489a7). That commit gives no source for
+ * the bytes. The same 224 bytes appear in other public Goodix driver projects;
+ * one of them attributes its copy to the vendor's Windows driver (gfusb.dll).
+ * We have not verified where the data originally came from, nor who holds
+ * rights in it. gxfp_milanl_apply_otp_patch() rewrites register 0x0220 (and
+ * 0x005c, 0x0082 when the OTP tcode is valid) in a copy before upload.
+ */
 static const uint8_t gxfp_milanl_cfg_template[GXFP_MILANL_CFG_LEN] = {
     0x30, 0x11, 0x64, 0x75, 0x00, 0x75, 0x2c, 0xa1, 0x1c, 0xbd, 0x18, 0xd5, 0x00, 0xd5, 0x00, 0xd5,
     0x00, 0xba, 0x00, 0x00, 0x80, 0xca, 0x00, 0x06, 0x00, 0x84, 0x00, 0xbe, 0xb2, 0x86, 0x00, 0xc5,
