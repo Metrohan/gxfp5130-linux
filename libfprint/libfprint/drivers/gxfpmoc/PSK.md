@@ -46,9 +46,27 @@ gxfp_psk_tool --upload-bb010002 blob.bin
 The PSK must be readable by libfprint. The default path is:
 
 ```
-/var/lib/fprintd/gxfp/psk_raw32.bin
+/var/lib/fprint/gxfp/psk_raw32.bin
 ```
 
-The path can be overridden with the `FP_GXFP_PSK` environment variable.
+Selection order is a nonempty `FP_GXFP_PSK`, then the new default, then
+`/var/lib/fprintd/gxfp/psk_raw32.bin` only when the new default is absent.
+An explicit path never falls back. Access errors, malformed keys and broken
+symlinks at the new path must be fixed instead of selecting a different key.
+For fprintd, set overrides in its service environment; exporting a variable in
+a terminal does not change a running system service.
+
+New provisioning uses the new default. Existing keys at either location are
+protected without `--replace`. Explicit replacement on a legacy-only install
+stays at that path. If both paths exist, provisioning refuses to choose which
+key to overwrite. `gxfp_capture` still requires an explicit `--psk-raw32` path;
+`gxfp_recovery` does not select a PSK file.
+
+To migrate, back up the existing key securely, stop fprintd, and copy the same
+32 bytes into the new directory (root ownership, directory 0700, file 0600).
+Restore SELinux labels and test verification before retiring the old copy.
+Do not run provisioning just to move a file: it changes the sensor key.
+Rollback is possible using the old path or an explicit service override as
+long as the sensor key has not been replaced. Never post PSK contents.
 
 Install the PSK to the default location with proper permissions.

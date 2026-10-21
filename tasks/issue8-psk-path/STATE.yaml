@@ -1,0 +1,15 @@
+status: publishing_for_fedora_acceptance
+updated: 2026-10-21
+base: e702d34
+branch: fix/issue8-psk-path
+worktree: /tmp/gxfp-issue8
+scope: issue8-psk-path
+implementation: complete_locally
+validation:
+  regression: 23_passed
+  userspace_ctest: 1_passed
+  libfprint_meson: 5_passed_20_skipped
+  independent_review: findings_addressed
+  fedora_enforcing: pending
+publication: authorized_by_user_2026-10-21
+next_action: Publish candidate PR and notify TarekELz on issue 8.

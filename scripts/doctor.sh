@@ -81,12 +81,44 @@ else
   warn "/dev/gxfp absent; install and load the module"
 fi
 
-psk=/var/lib/fprintd/gxfp/psk_raw32.bin
+psk=${FP_GXFP_PSK:-/var/lib/fprint/gxfp/psk_raw32.bin}
+legacy_psk=/var/lib/fprintd/gxfp/psk_raw32.bin
+psk_inspectable=1
+# Shell existence tests also return false on EACCES/ENOTDIR. Check each
+# ancestor before treating an inaccessible default as a missing key.
+psk_parent=${psk%/*}
+while test "$psk_parent" != / && test "$psk_parent" != "$psk"; do
+  if test -e "$psk_parent" || test -L "$psk_parent"; then
+    if ! test -d "$psk_parent" || ! test -x "$psk_parent"; then
+      fail "Cannot inspect PSK directory: $psk_parent; check permissions as root"
+      psk_inspectable=0
+      break
+    fi
+  fi
+  case "$psk_parent" in
+    */*) psk_parent=${psk_parent%/*}; test -n "$psk_parent" || psk_parent=/ ;;
+    *) break ;;
+  esac
+done
+if test "$psk_inspectable" -eq 1 && test -z "${FP_GXFP_PSK:-}" && ! test -e "$psk" && ! test -L "$psk"; then
+  if test -e "$legacy_psk" || test -L "$legacy_psk"; then
+    psk=$legacy_psk
+    warn "Using legacy PSK path: $psk; Fedora still needs the legacy fcontext rule"
+  fi
+fi
+ok "Checking PSK path: $psk"
+if test -n "${FP_GXFP_PSK:-}"; then
+  warn "FP_GXFP_PSK applies to this shell; configure fprintd's service environment separately"
+fi
 if test -f "$psk"; then
-  size=$(wc -c < "$psk")
-  mode=$(stat -c %a "$psk" 2>/dev/null || stat -f %Lp "$psk")
-  if test "$size" -eq 32; then ok "PSK is exactly 32 bytes"; else fail "PSK must be 32 bytes (found $size)"; fi
-  case "$mode" in 600|400) ok "PSK permissions are restricted ($mode)" ;; *) warn "PSK permissions should be 0600 or 0400 (found $mode)" ;; esac
+  if ! test -r "$psk"; then
+    fail "PSK is not readable; rerun doctor with sufficient permission"
+  else
+    size=$(wc -c < "$psk")
+    mode=$(stat -c %a "$psk" 2>/dev/null || stat -f %Lp "$psk")
+    if test "$size" -eq 32; then ok "PSK is exactly 32 bytes"; else fail "PSK must be 32 bytes (found $size)"; fi
+    case "$mode" in 600|400) ok "PSK permissions are restricted ($mode)" ;; *) warn "PSK permissions should be 0600 or 0400 (found $mode)" ;; esac
+  fi
 else
   warn "PSK not installed at $psk"
 fi
