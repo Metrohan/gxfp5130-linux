@@ -1,6 +1,7 @@
-# Fedora acceptance request (draft; not sent)
+# Fedora acceptance protocol
 
-@TarekELz, the PSK path change is ready for review on a local branch (not yet published).
+Published in draft PR #22 (https://github.com/Metrohan/gxfp5130-linux/pull/22), implementation commit `bc12719`, branch `fix/issue8-psk-path`.
+TarekELz notified: https://github.com/Metrohan/gxfp5130-linux/issues/8#issuecomment-6316503141. The posted comment contains the final reporter-facing wording.
 No new sensor protocol or matching changes are included. Your GPL-2.0 device policy is unchanged.
 
 Please keep SELinux enforcing and keep a secure backup of your current PSK.

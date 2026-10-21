@@ -18,3 +18,6 @@
 - `env -u LD_LIBRARY_PATH meson test -C /tmp/gxfp-issue8-build/libfprint --print-errorlogs`: 5 passed, 0 failed, 20 skipped. Only this child process environment was changed. Introspection/other drivers/hwdb are disabled in this configuration; skips are not passes.
 - `sh -n scripts/provision-psk.sh scripts/doctor.sh`, `git diff --check` and `cmp userspace/PSK.md libfprint/libfprint/drivers/gxfpmoc/PSK.md` passed.
 - Independent reviewer ran the then-current 21 tests successfully; found one MAJOR doctor issue and one documentation issue. Both addressed; see REVIEW.md. No independent Fedora acceptance claim.
+
+## Publication checkpoint
+On 2026-10-21 before commit/push, reran `python3 -B -m unittest discover -s tests -v` (23/23), CTest (1/1), and `env -u LD_LIBRARY_PATH meson test -C /tmp/gxfp-issue8-build/libfprint --print-errorlogs` (5 passed, 20 skipped). Logs: prepublish-regression.log and prepublish-meson.log under /tmp/gxfp-issue8-build. The publication-record follow-up changes documentation only.
