@@ -41,7 +41,7 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          pacman -Syu --noconfirm --needed base-devel git cmake meson ninja pkgconf python \
+          pacman -Syu --noconfirm --needed base-devel git cmake meson ninja pkgconf glib2-devel \
             linux-headers mbedtls3 libgusb libgudev opencv nss pixman
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Build
