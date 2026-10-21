@@ -6,8 +6,6 @@ entegrasyonu ve PAM kurulumu bir arada.
 
 **[English](README.md)** | Türkçe
 
-[![Kernel Patch: İncelemede](https://img.shields.io/badge/Kernel%20Patch-%C4%B0ncelemede-yellow.svg)](https://lore.kernel.org/linux-kernel/20260718080917.21893-1-metehangnen@gmail.com/)
-
 > Huawei MateBook D16 2024 (MCLF-XX) üzerinde çalışıyor.
 > Farklı bir modelde çalıştırdıysanız lütfen
 > [uyumluluk raporu açın](https://github.com/Metrohan/gxfp5130-linux/issues/new?template=compatibility_report.yml).
@@ -20,20 +18,19 @@ entegrasyonu ve PAM kurulumu bir arada.
 > **Emek:** Orijinal çekirdek sürücüsü, `gxfpmoc` kullanıcı alanı kütüphanesi ve
 > libfprint SIGFM çatalı [**Void755**](https://github.com/Void755) tarafından
 > oluşturulmuştur. Bu repo o çalışmayı dağıtım için paketler (Arch paketi, PAM
-> entegrasyonu, mainline çekirdeğe gönderim) — tam kaynak anlık görüntüleri için
+> entegrasyonu) — tam kaynak anlık görüntüleri için
 > aşağıdaki [Kaynak Kodun Kökeni](#kaynak-kodun-kökeni) bölümüne bakın.
 
 ---
 
 ## Upstream durumu
 
-Çekirdek sürücüsü, mainline'a dahil edilmek üzere Linux kernel mailing
-list'ine gönderildi:
+Çekirdek sürücüsünün ilk sürümü Linux kernel mailing list'ine [[PATCH 0/4] drivers/misc: add Goodix GXFP5130 eSPI fingerprint sensor driver](https://lore.kernel.org/linux-kernel/20260718080917.21893-1-metehangnen@gmail.com/) başlığıyla
+gönderildi (Temmuz 2026). İnceleme geri bildirimi sonrası seri **geri çekildi**.
+Mevcut modül hâlâ kullanıcı alanına ait olabilecek sensöre özgü protokol mantığı
+içeriyor, bu yüzden tasarım yeniden ele alınıyor. Yeniden gönderim için bir takvim yok.
 
-**[[PATCH 0/4] drivers/misc: add Goodix GXFP5130 eSPI fingerprint sensor driver](https://lore.kernel.org/linux-kernel/20260718080917.21893-1-metehangnen@gmail.com/)**
-
-Kabul edildiğinde modül, mainline çekirdekle birlikte gelecek ve
-desteklenen dağıtımlarda DKMS kurulumuna gerek kalmayacak.
+O zamana kadar modül çekirdek ağacının dışındadır ve **desteklenen kurulum yolu DKMS'tir**.
 
 ---
 
