@@ -1,0 +1,2 @@
+# CDPATH= cd is the standard way to neutralise CDPATH; the empty assignment is intended
+disable=SC1007
