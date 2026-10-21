@@ -23,7 +23,7 @@ for t in gxfp_capture gxfp_psk_tool gxfp_recovery; do
 done
 
 # Every external command only logs itself; STUB_FAIL="<cmd> <subcmd>" makes one fail.
-for c in dkms udevadm systemctl depmod make modprobe; do
+for c in dkms udevadm systemctl depmod make modprobe restorecon; do
   cat > "$BIN/$c" <<'STUB'
 #!/bin/sh
 echo "$(basename "$0") $*" >> "$LOG"
@@ -54,7 +54,7 @@ absent() { [ ! -e "$1" ]; }
 sum() { sha256sum "$1" | cut -d' ' -f1; }
 reset() {
   rm -rf /usr/src/gxfp-0.1.0 /usr/local/bin/gxfp_* /etc/udev/rules.d/60-gxfp.rules \
-    /etc/systemd/system/fprintd.service.d /var/lib/fprintd
+    /etc/systemd/system/fprintd.service.d /var/lib/fprintd /var/lib/fprint/gxfp
   : > "$LOG"
 }
 run() { rc=0; env "$@" >/dev/null 2>&1 || rc=$?; }  # sets rc
@@ -101,7 +101,8 @@ t "no udev rule installed" absent /etc/udev/rules.d/60-gxfp.rules
 t "failed install leaves /etc/pam.d untouched" pam_same
 
 echo "# provision-psk"
-PSK=/var/lib/fprintd/gxfp/psk_raw32.bin
+PSK=/var/lib/fprint/gxfp/psk_raw32.bin
+LEGACY=/var/lib/fprintd/gxfp/psk_raw32.bin
 reset
 rm -f /dev/gxfp
 run sh "$REPO/scripts/provision-psk.sh"
@@ -111,7 +112,8 @@ run sh "$REPO/scripts/provision-psk.sh"
 t "fresh provision exits 0" [ "$rc" -eq 0 ]
 t "PSK is 32 bytes" [ "$(wc -c < "$PSK")" -eq 32 ]
 t "PSK file is 0600 root:root" perm "$PSK" "600 root:root"
-t "PSK dir is 0700 root:root" perm /var/lib/fprintd/gxfp "700 root:root"
+t "PSK dir is 0700 root:root" perm /var/lib/fprint/gxfp "700 root:root"
+t "SELinux labels restored on the new directory" grep -q '^restorecon -R /var/lib/fprint/gxfp' "$LOG"
 before=$(sum "$PSK")
 run sh "$REPO/scripts/provision-psk.sh"
 t "refuses to replace existing PSK (exit 2)" [ "$rc" -eq 2 ]
@@ -125,6 +127,25 @@ t "existing PSK unchanged after wrong-size PSK" [ "$(sum "$PSK")" = "$before" ]
 run sh "$REPO/scripts/provision-psk.sh" --replace
 t "--replace exits 0" [ "$rc" -eq 0 ]
 t "--replace changes the PSK" [ "$(sum "$PSK")" != "$before" ]
+
+# an existing legacy key stays where it is; changing directories is not key rotation
+reset
+mkdir -p /var/lib/fprintd/gxfp
+head -c 32 /dev/urandom > "$LEGACY"
+legacy_before=$(sum "$LEGACY")
+run sh "$REPO/scripts/provision-psk.sh"
+t "legacy key without --replace is refused (exit 2)" [ "$rc" -eq 2 ]
+run sh "$REPO/scripts/provision-psk.sh" --replace
+t "--replace on a legacy-only install exits 0" [ "$rc" -eq 0 ]
+t "legacy key replaced in place" [ "$(sum "$LEGACY")" != "$legacy_before" ]
+t "no key created at the new path" absent "$PSK"
+mkdir -p /var/lib/fprint/gxfp
+head -c 32 /dev/urandom > "$PSK"
+both_new=$(sum "$PSK"); both_old=$(sum "$LEGACY")
+run sh "$REPO/scripts/provision-psk.sh" --replace
+t "keys at both paths: exit 2" [ "$rc" -eq 2 ]
+both_same() { [ "$(sum "$PSK")" = "$both_new" ] && [ "$(sum "$LEGACY")" = "$both_old" ]; }
+t "keys at both paths: neither is touched" both_same
 rm -f /dev/gxfp
 
 echo "$((n - bad))/$n passed"

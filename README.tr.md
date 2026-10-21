@@ -100,7 +100,7 @@ sudo modprobe gxfp
 
 # 3. TLS PSK'yı yükle ve yakalamayı doğrula
 sudo ./scripts/provision-psk.sh
-sudo gxfp_capture --psk-raw32 /var/lib/fprintd/gxfp/psk_raw32.bin
+sudo gxfp_capture --psk-raw32 /var/lib/fprint/gxfp/psk_raw32.bin
 ```
 
 Windows ile çift önyükleme yapıyorsanız ve sensör daha önce Windows üzerinde
@@ -157,6 +157,25 @@ timeout bekleyip sonra şifreye düştüğü için giriş çok yavaş olur.
 Aynı değişikliği `/etc/pam.d/system-login` dosyasına eklemek ekran yöneticisini
 de kapsar.
 
+## PSK yolları ve mevcut kurulumlar
+
+Yeni kurulum yolu `/var/lib/fprint/gxfp/psk_raw32.bin`. Yeni dosya yoksa sürücü
+eski `/var/lib/fprintd/gxfp/psk_raw32.bin` yolunu okur. **fprintd servis ortamındaki**
+boş olmayan `FP_GXFP_PSK` ikisini de geçersiz kılar; bu yol okunamıyorsa geri dönüş
+olmaz. Yeni yoldaki izin hatası, bozuk anahtar veya kırık sembolik bağlantı da
+eski anahtarın seçilmesine yol açmaz.
+
+`sudo ./scripts/doctor.sh` seçilen yolu gösterir. Aşağıdaki sorun giderme komutundan
+önce `PSK_PATH` değişkenini gösterilen yola ayarlayın. Yetkisiz
+çalıştırma root'a özel dizinleri inceleyemeyebilir. Provisioning mevcut anahtarı
+`--replace` olmadan değiştirmez; yalnız eski dosya varsa açıkça istenen replacement
+yine eski yola yazılır. İki dosya varsa önce bu belirsizlik çözülmelidir.
+Otomatik taşıma yapılmaz. Taşımak için aynı anahtarı kopyalayın, kısıtlı izinlerini
+koruyun ve etiketleri düzeltin; yeni anahtar üretmeyin. [PSK rehberi](userspace/PSK.md).
+
+Çevrimdışı regresyon testleri (root ve sensör erişimi yok):
+`python3 -B -m unittest discover -s tests -v`.
+
 ## Fedora / SELinux (enforcing)
 
 SELinux'u varsayılan olarak enforcing gelen dağıtımlarda (Fedora) `fprintd`,
@@ -167,9 +186,14 @@ her şeyi çalıştırdığı için bu bir sürücü değil, politika sorunudur.
 alınmıştır; raportör Fedora 44'te (MateBook 14 2022, FW `GF_GCC_EC_20040`)
 doğrulamıştır. **Bakımcı tarafından henüz test edilmedi.**
 
-İki etiket eksik:
+Cihaz etiketi hâlâ gereklidir. PSK adımı kurulumun yoluna bağlıdır:
 
-1. PSK dizini `/var/lib/fprintd/gxfp/`, Fedora'nın fprintd kuralının
+1. Yeni `/var/lib/fprint/gxfp/` yolu Fedora'nın `fprintd_var_lib_t` kuralı
+   kapsamındadır. Provisioning, varsa `restorecon` çalıştırır. Elle kopyalamadan
+   sonra `sudo restorecon -Rv /var/lib/fprint/gxfp` çalıştırın. Yeni yolun Fedora
+   enforcing kabul testi henüz yapılmadı.
+
+   **Yalnız eski kurulumlar:** `/var/lib/fprintd/gxfp/`, Fedora'nın fprintd kuralının
    (`/var/lib/fprint`, sonunda `d` yok) dışında kalır ve `var_lib_t` olarak
    kalır. Tek başına `restorecon` hiçbir şey değiştirmez. Önce kural ekleyin:
 
@@ -224,7 +248,7 @@ kullanıcı alanı basit bir okuma/yazma karakter aygıtı görür.
 | `modprobe gxfp` sonrası `/dev/gxfp` yok | Çekirdek/modül sürüm uyumsuzluğu | `modinfo gxfp` vermagic ile `uname -r` karşılaştırın |
 | `fprintd-enroll` `No devices available` yazıyor | Modül yüklü değil (`/dev/gxfp` yok) ya da GXFP sürücüsü olmayan stok `libfprint` kullanılıyor | `lsmod \| grep gxfp` ve `journalctl -k -b -g gxfp` kontrol edin; bu repodan derlenen yamalı `libfprint-gxfp` paketini kurun |
 | fprintd'den `Operation not permitted` | `DeviceAllow` drop-in eksik | `sudo ./scripts/install.sh` çalıştırın, fprintd'yi yeniden başlatın |
-| `SSL - Verification of the message MAC failed` (TLS MAC doğrulama hatası) | Ana PSK sensör PSK'sıyla eşleşmiyor | fprintd olmadan doğrulayın: `sudo systemctl stop fprintd && sudo gxfp_capture --psk-raw32 /var/lib/fprintd/gxfp/psk_raw32.bin`. Hâlâ başarısızsa anahtarı Windows'tan çıkarın ya da `/var/lib/fprintd/gxfp` dizinini yedekleyip `sudo ./scripts/provision-psk.sh --replace` çalıştırın (sensördeki anahtarın üzerine yazar; Windows'un anahtarı geçersiz olur) |
+| `SSL - Verification of the message MAC failed` (TLS MAC doğrulama hatası) | Ana PSK sensör PSK'sıyla eşleşmiyor | fprintd olmadan doğrulayın: `sudo systemctl stop fprintd && sudo gxfp_capture --psk-raw32 "$PSK_PATH"`. Hâlâ başarısızsa anahtarı Windows'tan çıkarın ya da seçilen `PSK_PATH` dosyasını güvenli biçimde yedekleyip `sudo ./scripts/provision-psk.sh --replace` çalıştırın (sensördeki anahtarın üzerine yazar; Windows'un anahtarı geçersiz olur) |
 | Yakalama çalışıyor, kayıt başarısız | libfprint/SIGFM katman sorunu | `FP_GXFP_LOG=1` çıktısı toplayın ve bir sorun bildirin |
 | Parmak kaldırma zaman zaman algılanmıyor | `GF_GCC_EC_20067` donanım yazılımı özgünlüğü | Sürücü otomatik yeniden deniyor; işlem gerekmez |
 | İlk kayıt denemesi parmak istemeden ~13sn içinde başarısız oluyor: `fdt wait-up retry failed: Connection timed out` | `GF_GCC_EC_20055` donanım yazılımında bir kez gözlendi; kök neden doğrulanmadı | Yeniden başlatıp tekrar deneyin. Tekrarlarsa `FP_GXFP_LOG=1`'e ek olarak çekirdek tarafı izini de toplayın: `echo 1 \| sudo tee /sys/kernel/debug/gxfp/trace_enable`, tekrar üretin, sonra `sudo cat /sys/kernel/debug/gxfp/trace_dump`; ikisini de bir sorun bildirimine ekleyin |

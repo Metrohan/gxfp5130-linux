@@ -100,7 +100,7 @@ sudo modprobe gxfp
 
 # 3. Provision the TLS PSK and confirm capture
 sudo ./scripts/provision-psk.sh
-sudo gxfp_capture --psk-raw32 /var/lib/fprintd/gxfp/psk_raw32.bin
+sudo gxfp_capture --psk-raw32 /var/lib/fprint/gxfp/psk_raw32.bin
 ```
 
 If you dual-boot Windows and the sensor was already provisioned there, extract
@@ -156,6 +156,26 @@ password auth.
 
 The same change in `/etc/pam.d/system-login` covers the display manager.
 
+## PSK paths and existing installations
+
+New installs use `/var/lib/fprint/gxfp/psk_raw32.bin`. The driver still reads
+`/var/lib/fprintd/gxfp/psk_raw32.bin` when the new default is absent. A nonempty
+`FP_GXFP_PSK` in the **fprintd service environment** overrides both; a missing
+or unreadable explicit path fails rather than falling back. Permission errors,
+invalid keys and broken symlinks at the new default also do not fall back.
+
+`sudo ./scripts/doctor.sh` reports the selected path. Set `PSK_PATH` to that printed path before using
+the troubleshooting command below.
+Unprivileged checks may be unable to inspect root-only PSK directories.
+Provisioning refuses existing keys without `--replace`; explicit replacement
+on a legacy-only installation stays at the legacy path. If both files exist,
+resolve the duplicate before provisioning. No automatic key migration occurs.
+For migration, copy the existing key, keep its restrictive permissions, and
+restore labels; do **not** generate a new key. See [PSK guide](userspace/PSK.md).
+
+Offline regression checks (unprivileged, no sensor access):
+`python3 -B -m unittest discover -s tests -v`.
+
 ## Fedora / SELinux (enforcing)
 
 On distributions that ship SELinux enforcing (Fedora), `fprintd` is denied
@@ -166,9 +186,14 @@ is a policy problem, not a driver problem. Diagnosed and worked out by
 by the reporter on Fedora 44 (MateBook 14 2022, FW `GF_GCC_EC_20040`). **Not
 yet tested by the maintainer.**
 
-Two labels are missing:
+The device label is still required. PSK handling depends on the installation:
 
-1. The PSK directory `/var/lib/fprintd/gxfp/` is outside Fedora's fprintd rule
+1. New installs use `/var/lib/fprint/gxfp/`, covered by Fedora's existing
+   `fprintd_var_lib_t` rule. Provisioning runs `restorecon` when available;
+   after copying a key manually, run `sudo restorecon -Rv /var/lib/fprint/gxfp`.
+   This path change still requires Fedora enforcing acceptance testing.
+
+   **Legacy installs only:** `/var/lib/fprintd/gxfp/` is outside Fedora's fprintd rule
    (`/var/lib/fprint`, no trailing `d`), so it stays `var_lib_t`. `restorecon`
    alone changes nothing. Add a rule first:
 
@@ -223,7 +248,7 @@ transport; userspace sees a simple read/write character device.
 | No`/dev/gxfp` after `modprobe gxfp`        | Kernel/module version mismatch          | Check`modinfo gxfp` vermagic vs `uname -r`                |
 | `fprintd-enroll` prints `No devices available` | Module not loaded (no `/dev/gxfp`), or stock `libfprint` without the GXFP driver is in use | Check `lsmod \| grep gxfp` and `journalctl -k -b -g gxfp`; install the patched `libfprint-gxfp` package built from this repo |
 | `Operation not permitted` from fprintd       | Missing`DeviceAllow` drop-in          | Re-run`sudo ./scripts/install.sh`, restart fprintd          |
-| `SSL - Verification of the message MAC failed` (TLS MAC verification failure)                   | Host PSK ≠ sensor PSK                  | Confirm without fprintd: `sudo systemctl stop fprintd && sudo gxfp_capture --psk-raw32 /var/lib/fprintd/gxfp/psk_raw32.bin`. If it still fails, extract the key from Windows, or back up `/var/lib/fprintd/gxfp` and run `sudo ./scripts/provision-psk.sh --replace` (overwrites the sensor key; Windows' key stops working) |
+| `SSL - Verification of the message MAC failed` (TLS MAC verification failure)                   | Host PSK ≠ sensor PSK                  | Confirm without fprintd: `sudo systemctl stop fprintd && sudo gxfp_capture --psk-raw32 "$PSK_PATH"`. If it still fails, extract the key from Windows, or securely back up the selected `PSK_PATH` and run `sudo ./scripts/provision-psk.sh --replace` (overwrites the sensor key; Windows' key stops working) |
 | Capture works, enrollment fails                | libfprint/SIGFM layer issue             | Collect`FP_GXFP_LOG=1` output and open an issue             |
 | Finger-up occasionally missed                  | Known firmware`GF_GCC_EC_20067` quirk | Driver retries automatically; no action needed                |
 | First enroll attempt fails ~13s in, before any finger prompt: `fdt wait-up retry failed: Connection timed out` | Observed once on FW `GF_GCC_EC_20055`; root cause not confirmed | Reboot and retry. If it recurs, in addition to `FP_GXFP_LOG=1`, capture the kernel-side trace: `echo 1 \| sudo tee /sys/kernel/debug/gxfp/trace_enable`, reproduce, then `sudo cat /sys/kernel/debug/gxfp/trace_dump`, and attach both to an issue |

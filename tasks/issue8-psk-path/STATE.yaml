@@ -1,0 +1,18 @@
+status: awaiting_fedora_acceptance
+updated: 2026-10-21
+base: e702d34
+branch: fix/issue8-psk-path
+worktree: /tmp/gxfp-issue8
+scope: issue8-psk-path
+implementation: complete_locally
+validation:
+  regression: 23_passed
+  userspace_ctest: 1_passed
+  libfprint_meson: 5_passed_20_skipped
+  independent_review: findings_addressed
+  fedora_enforcing: pending
+publication: draft_pr_open_reporter_notified
+implementation_commit: bc12719
+pr: https://github.com/Metrohan/gxfp5130-linux/pull/22
+issue_comment: https://github.com/Metrohan/gxfp5130-linux/issues/8#issuecomment-6316503141
+next_action: Review TarekELz Fedora enforcing results on issue 8.
