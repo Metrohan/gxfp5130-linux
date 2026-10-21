@@ -276,6 +276,9 @@ If the driver works on a MateBook model not listed above, please open a
 - Userspace library/tools: [`Void755/gxfpmoc`](https://github.com/Void755/gxfpmoc), snapshot `4b489a7`
 - libfprint fork: [`Void755/libfprint`](https://github.com/Void755/libfprint), snapshot `1f7941e` + OpenCV 5 fallback
 
+Local change to the `gxfpmoc` snapshot: `tools/requirements.txt` (a lone `cryptography` pin that
+`unseal_bb010002.py` never imports) was removed, and the matching `pip install` line in `PSK.md`.
+
 Data provenance: the 224-byte sensor configuration table
 (`gxfp_milanl_cfg_template`, `userspace/src/algo/sensor_cfg.c`) is
 byte-identical to the one in `Void755/gxfpmoc` (commit `2db33f7`), which does not

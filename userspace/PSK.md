@@ -17,7 +17,6 @@ When the Windows driver detects a PSK mismatch, it generates and uploads a new P
 Extract it with `tools/unseal_bb010002.py`:
 
 ```bash
-pip install -r tools/requirements.txt
 python tools/unseal_bb010002.py
 ```
 
