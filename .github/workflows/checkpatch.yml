@@ -1,0 +1,25 @@
+name: checkpatch
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checkpatch:
+    runs-on: ubuntu-latest
+    env:
+      # torvalds/linux v6.18; pinned by commit so the rules do not drift
+      KSHA: 7d0a66e4bb9081d75c82ec4957c50034cb0ea449
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Fetch checkpatch
+        run: |
+          for f in checkpatch.pl spelling.txt const_structs.checkpatch; do
+            curl -fsSLO "https://raw.githubusercontent.com/torvalds/linux/$KSHA/scripts/$f"
+          done
+      - name: Run on kernel/
+        run: git ls-files 'kernel/*.c' 'kernel/*.h' | xargs perl checkpatch.pl --no-tree --terse -f

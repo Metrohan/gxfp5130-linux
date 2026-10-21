@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Version is the same in dkms.conf, install.sh and uninstall.sh
+        run: |
+          d=$(sed -n 's/^PACKAGE_VERSION="\(.*\)"/\1/p' kernel/dkms.conf)
+          i=$(sed -n 's/^VERSION=//p' scripts/install.sh)
+          u=$(sed -n 's/^VERSION=//p' scripts/uninstall.sh)
+          echo "dkms=$d install=$i uninstall=$u"
+          [ -n "$d" ] && [ "$d" = "$i" ] && [ "$d" = "$u" ]
+      - name: shellcheck
+        run: shellcheck -S warning scripts/*.sh tests/*.sh
+      - name: cppcheck (userspace only; kernel code needs kernel headers)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq cppcheck
+          cppcheck --error-exitcode=1 --enable=warning -q -I userspace/include userspace/src userspace/tools
+
+  # Mirrors the maintainer's environment: scripts/build.sh builds the module,
+  # userspace tools and the libfprint driver in one go.
+  build-arch:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm --needed base-devel git cmake meson ninja pkgconf \
+            linux-headers mbedtls3 libgusb libgudev opencv nss pixman
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build
+        run: |
+          # build.sh uses the running kernel's build dir; the container has none
+          kver=$(basename /usr/lib/modules/*/)
+          ln -s "/usr/lib/modules/$kver" "/lib/modules/$(uname -r)" 2>/dev/null || true
+          sh scripts/build.sh
+      - name: Userspace tests
+        run: ctest --test-dir build/userspace --output-on-failure
+
+  build-fedora:
+    runs-on: ubuntu-latest
+    container: fedora:latest
+    steps:
+      - name: Install dependencies
+        run: dnf install -y gcc make cmake git kernel-devel mbedtls-devel
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Kernel module
+        run: make -C kernel KERNELDIR=$(ls -d /usr/src/kernels/* | head -1)
+      - name: Userspace
+        run: |
+          cmake -S userspace -B build/userspace -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/userspace
+          ctest --test-dir build/userspace --output-on-failure
+
+  dkms-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: DKMS build
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq dkms linux-headers-$(uname -r)
+          sudo cp -r kernel /usr/src/gxfp-0.1.0
+          sudo dkms add gxfp/0.1.0
+          sudo dkms build gxfp/0.1.0
+
+  # install/uninstall/provision scripts use absolute paths and need root, so
+  # they only run inside this throwaway container (see tests/install-sandbox.sh).
+  sandbox-tests:
+    runs-on: ubuntu-latest
+    container: debian:stable-slim
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: GXFP_SANDBOX=1 sh tests/install-sandbox.sh
+      - name: udev rule syntax
+        run: |
+          apt-get update -qq && apt-get install -y -qq udev
+          udevadm verify config/60-gxfp.rules
