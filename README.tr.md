@@ -283,6 +283,9 @@ Kullanıcı alanı araçları: GPL-2.0-only
 - Kullanıcı alanı kütüphanesi/araçları: [`Void755/gxfpmoc`](https://github.com/Void755/gxfpmoc), anlık görüntü `4b489a7`
 - libfprint çatalı: [`Void755/libfprint`](https://github.com/Void755/libfprint), anlık görüntü `1f7941e` + OpenCV 5 desteği
 
+`gxfpmoc` anlık görüntüsünde yerel değişiklik: `tools/requirements.txt` (`unseal_bb010002.py`'nin hiç
+import etmediği tek satırlık `cryptography` sabitlemesi) ve `PSK.md`'deki ilgili `pip install` satırı kaldırıldı.
+
 Veri kökeni: 224 baytlık sensör yapılandırma tablosu (`gxfp_milanl_cfg_template`,
 `userspace/src/algo/sensor_cfg.c`), `Void755/gxfpmoc` içindeki tabloyla (commit
 `2db33f7`) bayt bayt aynıdır; o depo baytların nereden geldiğini belgelemiyor. Aynı
