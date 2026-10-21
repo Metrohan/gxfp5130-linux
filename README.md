@@ -9,7 +9,6 @@ readm
 English | **[Türkçe](README.tr.md)**
 
 [![License: GPL-2.0](https://img.shields.io/badge/License-GPL--2.0-blue.svg)](LICENSE)
-[![Kernel Patch: Under Review](<https://img.shields.io/badge/Kernel%20Patch-Under%20Review-yellow.svg>)](https://lore.kernel.org/linux-kernel/20260718080917.21893-1-metehangnen@gmail.com/)
 
 Full Linux support for the **Goodix GXFP5130** fingerprint sensor found in
 Huawei MateBook laptops — kernel module, userspace tools, libfprint integration,
@@ -26,20 +25,20 @@ and PAM setup, all in one place.
 > **Credits:** The original kernel driver, `gxfpmoc` userspace library, and
 > the libfprint SIGFM fork were created by [**Void755**](https://github.com/Void755).
 > This repository packages that work for distribution (Arch package, PAM
-> integration, mainline kernel submission) — see [Upstream provenance](#upstream-provenance)
+> integration) — see [Upstream provenance](#upstream-provenance)
 > for exact source snapshots.
 
 ---
 
 ## Upstream status
 
-The kernel driver has been submitted to the Linux kernel mailing list
-for mainline inclusion:
+A first version of the kernel driver was sent to the Linux kernel mailing list
+as [[PATCH 0/4] drivers/misc: add Goodix GXFP5130 eSPI fingerprint sensor driver](https://lore.kernel.org/linux-kernel/20260718080917.21893-1-metehangnen@gmail.com/) (July 2026).
+After review feedback, the series was **withdrawn**. The current module still
+contains sensor-specific protocol logic that arguably belongs in userspace, so
+the design is being reconsidered. There is no timeline for a resubmission.
 
-**[[PATCH 0/4] drivers/misc: add Goodix GXFP5130 eSPI fingerprint sensor driver](https://lore.kernel.org/linux-kernel/20260718080917.21893-1-metehangnen@gmail.com/)**
-
-Once accepted, the module will ship with the mainline kernel and no DKMS
-installation will be needed on supported distributions.
+Until then, the module is out of tree and **DKMS is the supported way to install it**.
 
 ---
 
