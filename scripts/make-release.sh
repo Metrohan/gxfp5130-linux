@@ -1,25 +1,17 @@
 #!/bin/sh
+# Source tarball of a git ref (default HEAD): tracked files only, so untracked
+# or ignored local files (recordings, finger.pgm, .claude/) can never leak in.
 set -eu
 
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PARENT=$(dirname -- "$ROOT")
 NAME=$(basename -- "$ROOT")
+REF=${1:-HEAD}
 ARCHIVE="$PARENT/${NAME}.tar.gz"
 
-tar -C "$PARENT" -czf "$ARCHIVE" \
-  --exclude="$NAME/build" \
-  --exclude="$NAME/.codegraph" \
-  --exclude="$NAME/.cursor" \
-  --exclude='*.ko' \
-  --exclude='*.o' \
-  --exclude='*.mod' \
-  --exclude='*.mod.c' \
-  --exclude='Module.symvers' \
-  --exclude='modules.order' \
-  --exclude='.*.cmd' \
-  "$NAME"
+git -C "$ROOT" archive --format=tar.gz --prefix="$NAME/" -o "$ARCHIVE" "$REF"
 
-sha256sum "$ARCHIVE" > "$ARCHIVE.sha256"
-printf 'Created %s\n' "$ARCHIVE"
+( cd "$PARENT" && sha256sum "${NAME}.tar.gz" > "${NAME}.tar.gz.sha256" )
+printf 'Created %s from %s\n' "$ARCHIVE" "$REF"
 printf 'Checksum: '
 cat "$ARCHIVE.sha256"
