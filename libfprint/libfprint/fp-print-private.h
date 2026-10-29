@@ -43,4 +43,8 @@ struct _FpPrint
 
   GVariant  *data;
   GPtrArray *prints;
+
+  /* SIGFM template update: the last sigfm_adapted entries of prints were
+   * added after matches; the ones before them are the enrolled samples. */
+  guint      sigfm_adapted;
 };

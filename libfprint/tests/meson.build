@@ -153,6 +153,7 @@ unit_tests = [
     'fpi-ssm',
     'fpi-assembling',
     'fp-print',
+    'fpi-print',
 ]
 
 if 'virtual_image' in drivers
