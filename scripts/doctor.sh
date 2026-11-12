@@ -34,7 +34,7 @@ case "$mbedtls_version" in
   2.*|3.*) supported_mbedtls=1 ;;
   *) supported_mbedtls=0 ;;
 esac
-if test "$supported_mbedtls" -eq 1 && test -f /usr/include/mbedtls/mbedtls/gcm.h; then
+if test "$supported_mbedtls" -eq 1 && test -f /usr/include/mbedtls/gcm.h; then
   ok "Mbed TLS $mbedtls_version development package detected"
 elif test -f /usr/include/mbedtls3/mbedtls/gcm.h && \
      PKG_CONFIG_PATH=/usr/lib/mbedtls3/pkgconfig pkg-config --exists mbedtls 2>/dev/null; then
