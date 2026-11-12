@@ -8,7 +8,11 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(MbedTLS REQUIRED)
+find_package(MbedTLS CONFIG QUIET)
+if(NOT MbedTLS_FOUND)
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+	find_package(MbedTLS MODULE REQUIRED)
+endif()
 
 add_library(gxfp
 		src/io/dev.c
