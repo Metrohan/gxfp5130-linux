@@ -10,6 +10,15 @@
 #include <mbedtls/md.h>
 #include <mbedtls/sha256.h>
 #include <mbedtls/sha512.h>
+#include <mbedtls/version.h>
+
+#if MBEDTLS_VERSION_NUMBER < 0x03000000
+#define GXFP_SHA256 mbedtls_sha256_ret
+#define GXFP_SHA512 mbedtls_sha512_ret
+#else
+#define GXFP_SHA256 mbedtls_sha256
+#define GXFP_SHA512 mbedtls_sha512
+#endif
 
 const uint8_t gxfp_payload_seed32_runtime[32] = {
     0x5c, 0xba, 0x6e, 0x25, 0x81, 0x95, 0x18, 0xde,
@@ -122,7 +131,7 @@ int gxfp_payload_calc_seed16(const uint8_t *psk, size_t psk_len, uint8_t out_see
         off += 4;
     }
 
-    if (mbedtls_sha256(buf, off, digest, 0) != 0) {
+    if (GXFP_SHA256(buf, off, digest, 0) != 0) {
         free(buf);
         return -EIO;
     }
@@ -271,14 +280,14 @@ int gxfp_payload_build_bb020003_hash_prefix(const uint8_t *bb010003_wb_data,
                                             uint8_t *out_hash,
                                             size_t out_hash_len)
 {
-    uint8_t digest[48];
+    uint8_t digest[64];
 
     if (!bb010003_wb_data || bb010003_wb_data_len == 0 || !out_hash)
         return -EINVAL;
     if (out_hash_len == 0 || out_hash_len > sizeof(digest))
         return -EINVAL;
 
-    if (mbedtls_sha512(bb010003_wb_data, bb010003_wb_data_len, digest, 1) != 0)
+    if (GXFP_SHA512(bb010003_wb_data, bb010003_wb_data_len, digest, 1) != 0)
         return -EIO;
 
     memcpy(out_hash, digest, out_hash_len);

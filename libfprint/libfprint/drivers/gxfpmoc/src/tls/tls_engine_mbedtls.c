@@ -11,6 +11,7 @@
 #include <mbedtls/entropy.h>
 #include <mbedtls/error.h>
 #include <mbedtls/ssl.h>
+#include <mbedtls/version.h>
 
 struct gxfp_tls_engine {
 	gxfp_tls_send_record_fn send_fn;
@@ -119,8 +120,13 @@ static int setup_ssl(struct gxfp_tls_engine *e, const uint8_t *psk, size_t psk_l
 		return -EIO;
 
 	mbedtls_ssl_conf_rng(&e->conf, mbedtls_ctr_drbg_random, &e->ctr_drbg);
+#if MBEDTLS_VERSION_NUMBER < 0x03000000
+	mbedtls_ssl_conf_min_version(&e->conf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
+	mbedtls_ssl_conf_max_version(&e->conf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
+#else
 	mbedtls_ssl_conf_min_tls_version(&e->conf, MBEDTLS_SSL_VERSION_TLS1_2);
 	mbedtls_ssl_conf_max_tls_version(&e->conf, MBEDTLS_SSL_VERSION_TLS1_2);
+#endif
 
 	r = mbedtls_ssl_conf_psk(&e->conf, psk, psk_len,
 				 (const unsigned char *)GXFP5130_PSK_IDENTITY,
