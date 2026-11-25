@@ -60,7 +60,8 @@ fpi_print_add_print (FpPrint *print, FpPrint *add)
     print->type == FPI_PRINT_NBIS ?
     g_memdup2 (add->prints->pdata[0], sizeof (struct xyt_struct)) :
     (void *) sigfm_copy_info (add->prints->pdata[0]);
-  g_ptr_array_add (print->prints, to_add);
+  /* Enrolled samples go before any added by template update. */
+  g_ptr_array_insert (print->prints, print->prints->len - print->sigfm_adapted, to_add);
 }
 
 /**
@@ -310,6 +311,71 @@ fpi_print_sigfm_match (FpPrint * template, FpPrint * print,
         return FPI_MATCH_SUCCESS;
     }
   return FPI_MATCH_FAIL;
+}
+
+/**
+ * fpi_print_sigfm_adapt:
+ * @template: A #FPI_PRINT_SIGFM #FpPrint that @print just matched
+ * @print: The newly scanned #FpPrint (exactly one print)
+ * @threshold: The match threshold
+ * @min_support: How many enrolled samples must each match @print
+ * @max_adapted: How many added samples are kept after the enrolled ones
+ *
+ * Template update: returns a copy of @template with @print added, so the
+ * print follows slow changes in the finger's appearance. Once @max_adapted
+ * samples were added, the oldest added one is dropped; enrolled samples are
+ * never dropped. Only enrolled samples count as support, so a wrongly added
+ * sample can never let further scans in on its own. @template is not changed.
+ *
+ * Returns: (transfer full) (nullable): The updated template, or %NULL if
+ *   fewer than @min_support enrolled samples match @print
+ */
+FpPrint *
+fpi_print_sigfm_adapt (FpPrint *template, FpPrint *print, gint threshold,
+                       guint min_support, guint max_adapted)
+{
+  g_autoptr(GError) error = NULL;
+  g_autofree guchar *data = NULL;
+  SigfmImgInfo *probe;
+  FpPrint *copy;
+  guint enrolled, support = 0;
+  gsize len;
+
+  g_return_val_if_fail (max_adapted > 0, NULL);
+
+  if (template->type != FPI_PRINT_SIGFM || print->type != FPI_PRINT_SIGFM ||
+      print->prints->len != 1)
+    return NULL;
+
+  probe = g_ptr_array_index (print->prints, 0);
+  enrolled = template->prints->len - template->sigfm_adapted;
+  for (guint i = 0; i < enrolled; i++)
+    if (sigfm_match_score (g_ptr_array_index (template->prints, i), probe) >= threshold)
+      support++;
+
+  if (support < min_support)
+    {
+      fp_dbg ("sigfm adapt: %u/%u enrolled samples match, need %u", support, enrolled, min_support);
+      return NULL;
+    }
+
+  if (!fp_print_serialize (template, &data, &len, &error) ||
+      !(copy = fp_print_deserialize (data, len, &error)))
+    {
+      g_warning ("sigfm adapt: could not copy template: %s", error->message);
+      return NULL;
+    }
+
+  while (copy->sigfm_adapted >= max_adapted)
+    {
+      g_ptr_array_remove_index (copy->prints, enrolled);
+      copy->sigfm_adapted--;
+    }
+  g_ptr_array_add (copy->prints, sigfm_copy_info (probe));
+  copy->sigfm_adapted++;
+  fp_dbg ("sigfm adapt: %u/%u enrolled samples match, %u added samples",
+          support, enrolled, copy->sigfm_adapted);
+  return copy;
 }
 
 /**
