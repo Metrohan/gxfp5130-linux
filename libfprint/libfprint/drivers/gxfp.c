@@ -8,12 +8,14 @@
 #include <gio/gio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "gxfp/algo/common.h"
 #include "gxfp/flow/session.h"
 
 #define DEFAULT_ENROLL_SAMPLES 16
-#define GXFP_DEFAULT_PSK_PATH  "/var/lib/fprintd/gxfp/psk_raw32.bin"
+#define GXFP_DEFAULT_PSK_PATH  "/var/lib/fprint/gxfp/psk_raw32.bin"
+#define GXFP_LEGACY_PSK_PATH   "/var/lib/fprintd/gxfp/psk_raw32.bin"
 
 struct _FpiDeviceGxfp {
   FpImageDevice parent;
@@ -202,11 +204,24 @@ gxfp_img_open (FpImageDevice *dev)
   self->dev_path = g_strdup (chardev_path);
 
   psk_env = g_getenv ("FP_GXFP_PSK");
-  if (!psk_env || psk_env[0] == '\0')
-    psk_env = GXFP_DEFAULT_PSK_PATH;
-  self->psk_path = g_strdup (psk_env);
+  self->psk_path = g_strdup (psk_env && psk_env[0] ? psk_env : GXFP_DEFAULT_PSK_PATH);
 
   r = gxfp_read_file_all (self->psk_path, &psk_raw, &psk_raw_len);
+  if (r == -ENOENT && (!psk_env || psk_env[0] == '\0'))
+    {
+      struct stat st;
+
+      /* A broken symlink or inaccessible new path must not select another key. */
+      if (lstat (GXFP_DEFAULT_PSK_PATH, &st) < 0 && errno == ENOENT)
+        {
+          r = gxfp_read_file_all (GXFP_LEGACY_PSK_PATH, &psk_raw, &psk_raw_len);
+          if (r != -ENOENT)
+            {
+              g_free (self->psk_path);
+              self->psk_path = g_strdup (GXFP_LEGACY_PSK_PATH);
+            }
+        }
+    }
   if (r < 0)
     {
       g_set_error (&error,
